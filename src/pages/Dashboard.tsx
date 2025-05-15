@@ -1,14 +1,28 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { List, Bell, Calendar, User, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { List, Bell, Calendar, User, Clock, LogOut } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const today = new Date();
   const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const formattedDate = today.toLocaleDateString('en-US', options);
+  
+  const handleLogout = () => {
+    // In a real app, this would clear auth tokens, etc.
+    toast.success("Logged out successfully");
+    navigate('/');
+  };
   
   return (
     <div className="page-container">
@@ -17,9 +31,19 @@ const Dashboard: React.FC = () => {
           <h1 className="font-bold">Dashboard</h1>
           <p className="text-teacherApp-textLight text-sm">{formattedDate}</p>
         </div>
-        <Avatar className="h-10 w-10 border border-gray-200">
-          <AvatarFallback className="bg-teacherApp-accent text-white">MS</AvatarFallback>
-        </Avatar>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Avatar className="h-10 w-10 border border-gray-200 cursor-pointer">
+              <AvatarFallback className="bg-teacherApp-accent text-white">MS</AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-white">
+            <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Logout</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       
       <section className="mb-6">
