@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -14,20 +14,20 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
-// Mock data for students
+// Enhanced mock data for students with roll numbers and gender
 const students = [
-  { id: 1, name: "Aiden Cooper", present: true, initials: "AC" },
-  { id: 2, name: "Brooke Davis", present: false, initials: "BD" },
-  { id: 3, name: "Carlos Garcia", present: true, initials: "CG" },
-  { id: 4, name: "Dina Martinez", present: true, initials: "DM" },
-  { id: 5, name: "Elijah Jones", present: true, initials: "EJ" },
-  { id: 6, name: "Fatima Khan", present: false, initials: "FK" },
-  { id: 7, name: "George Wilson", present: true, initials: "GW" },
-  { id: 8, name: "Hannah Lee", present: true, initials: "HL" },
-  { id: 9, name: "Isaac Newton", present: true, initials: "IN" },
-  { id: 10, name: "Julia Smith", present: false, initials: "JS" },
-  { id: 11, name: "Kevin Patel", present: true, initials: "KP" },
-  { id: 12, name: "Layla Williams", present: true, initials: "LW" },
+  { id: 1, name: "Aiden Cooper", rollNumber: "B101", gender: "male", present: true, initials: "AC" },
+  { id: 2, name: "Brooke Davis", rollNumber: "G101", gender: "female", present: false, initials: "BD" },
+  { id: 3, name: "Carlos Garcia", rollNumber: "B102", gender: "male", present: true, initials: "CG" },
+  { id: 4, name: "Dina Martinez", rollNumber: "G102", gender: "female", present: true, initials: "DM" },
+  { id: 5, name: "Elijah Jones", rollNumber: "B103", gender: "male", present: true, initials: "EJ" },
+  { id: 6, name: "Fatima Khan", rollNumber: "G103", gender: "female", present: false, initials: "FK" },
+  { id: 7, name: "George Wilson", rollNumber: "B104", gender: "male", present: true, initials: "GW" },
+  { id: 8, name: "Hannah Lee", rollNumber: "G104", gender: "female", present: true, initials: "HL" },
+  { id: 9, name: "Isaac Newton", rollNumber: "B105", gender: "male", present: true, initials: "IN" },
+  { id: 10, name: "Julia Smith", rollNumber: "G105", gender: "female", present: false, initials: "JS" },
+  { id: 11, name: "Kevin Patel", rollNumber: "B106", gender: "male", present: true, initials: "KP" },
+  { id: 12, name: "Layla Williams", rollNumber: "G106", gender: "female", present: true, initials: "LW" },
 ];
 
 const Attendance: React.FC = () => {
@@ -41,6 +41,18 @@ const Attendance: React.FC = () => {
     month: 'short', 
     year: 'numeric' 
   });
+  
+  // Sort students: girls first, then boys
+  const sortedStudents = useMemo(() => {
+    return [...attendanceList].sort((a, b) => {
+      // First sort by gender (females first)
+      if (a.gender !== b.gender) {
+        return a.gender === "female" ? -1 : 1;
+      }
+      // Then sort by roll number within the same gender
+      return a.rollNumber.localeCompare(b.rollNumber);
+    });
+  }, [attendanceList]);
   
   const handlePreviousDay = () => {
     const prevDay = new Date(date);
@@ -69,7 +81,10 @@ const Attendance: React.FC = () => {
 
   return (
     <div className="page-container">
-      <h1 className="font-bold mb-4">Attendance</h1>
+      <div className="flex items-center gap-2 mb-4">
+        <Users size={20} />
+        <h1 className="font-bold">Attendance</h1>
+      </div>
       
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
@@ -107,23 +122,26 @@ const Attendance: React.FC = () => {
           </Select>
           
           <div className="text-sm text-teacherApp-textLight">
-            <span className="font-medium text-green-600">{attendanceList.filter(s => s.present).length}</span> / {attendanceList.length} present
+            <span className="font-medium text-green-600">{sortedStudents.filter(s => s.present).length}</span> / {sortedStudents.length} present
           </div>
         </div>
       </div>
       
       <div className="space-y-3 mb-8">
-        {attendanceList.map((student) => (
+        {sortedStudents.map((student) => (
           <Card key={student.id} className="border-none bg-teacherApp-card">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <Avatar className="h-9 w-9 mr-3">
-                    <AvatarFallback className="text-xs bg-gray-200 text-teacherApp-accent">
+                    <AvatarFallback className={`text-xs bg-gray-200 ${student.gender === 'female' ? 'text-pink-500' : 'text-blue-500'}`}>
                       {student.initials}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="font-medium">{student.name}</span>
+                  <div>
+                    <span className="font-medium">{student.name}</span>
+                    <div className="text-xs text-gray-500">{student.rollNumber}</div>
+                  </div>
                 </div>
                 <Switch 
                   checked={student.present} 
