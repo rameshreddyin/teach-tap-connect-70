@@ -4,12 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
+import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -31,62 +34,91 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-teacherApp-background">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold">Teacher Portal</h1>
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-b from-white to-gray-100">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-teacherApp-accent">Teacher Portal</h1>
           <p className="text-teacherApp-textLight mt-2">Sign in to access your dashboard</p>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl text-center">Login</CardTitle>
+        <Card className="border-none shadow-lg">
+          <CardHeader className="space-y-1 pb-2">
+            <CardTitle className="text-2xl font-bold text-center">Welcome back</CardTitle>
+            <p className="text-sm text-muted-foreground text-center">Enter your credentials to sign in</p>
           </CardHeader>
           <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">
+                <Label htmlFor="email" className="text-sm font-medium">
                   Email or Phone
-                </label>
-                <Input
-                  id="email"
-                  type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email or phone"
-                  required
-                />
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="text"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email or phone"
+                    className="pl-10"
+                    required
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label htmlFor="password" className="text-sm font-medium">
+                  <Label htmlFor="password" className="text-sm font-medium">
                     Password
-                  </label>
-                  <a href="#" className="text-xs text-teacherApp-accent hover:underline">
+                  </Label>
+                  <a href="#" className="text-xs text-teacherApp-accent font-medium hover:underline">
                     Forgot password?
                   </a>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="pl-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-2.5 text-muted-foreground"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col gap-4 pt-2">
               <Button 
                 type="submit" 
-                className="w-full bg-teacherApp-accent hover:bg-black text-white"
+                className="w-full bg-teacherApp-accent hover:bg-black text-white font-medium py-2.5"
                 disabled={isLoading}
               >
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
+              
+              <div className="text-center text-sm text-muted-foreground">
+                <span>Don't have an account? </span>
+                <a href="#" className="text-teacherApp-accent font-medium hover:underline">
+                  Contact admin
+                </a>
+              </div>
             </CardFooter>
           </form>
         </Card>
+        
+        <div className="text-center mt-8">
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} Teacher Portal. All rights reserved.
+          </p>
+        </div>
       </div>
     </div>
   );
