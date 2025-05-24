@@ -43,7 +43,7 @@ const students = [
   { id: 12, name: "Layla Williams", rollNumber: "G106", gender: "female", status: "permitted", initials: "LW" },
 ];
 
-// Simplified attendance status options with subtle colors
+// Attendance status options with icons only
 const attendanceOptions = [
   { value: "present", label: "Present", color: "bg-emerald-100 text-emerald-700 border-emerald-200", icon: CheckCircle },
   { value: "late", label: "Late", color: "bg-amber-100 text-amber-700 border-amber-200", icon: Clock },
@@ -58,7 +58,6 @@ const Attendance: React.FC = () => {
   const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const isMobile = useIsMobile();
-  const [activeStatus, setActiveStatus] = useState<string | null>(null);
   
   const formattedDate = date.toLocaleDateString('en-US', { 
     weekday: 'short',
@@ -95,14 +94,12 @@ const Attendance: React.FC = () => {
     const prevDay = new Date(date);
     prevDay.setDate(date.getDate() - 1);
     setDate(prevDay);
-    setActiveStatus(null);
   };
   
   const handleNextDay = () => {
     const nextDay = new Date(date);
     nextDay.setDate(date.getDate() + 1);
     setDate(nextDay);
-    setActiveStatus(null);
   };
   
   // Get the count of students by status
@@ -177,10 +174,9 @@ const Attendance: React.FC = () => {
     if (!option) return null;
     
     return (
-      <Badge className={`${option.color} animate-fade-in border`}>
-        <option.icon className="mr-1 h-3 w-3" />
-        {option.label}
-      </Badge>
+      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${option.color.split(' ')[0]} ${option.color.split(' ')[1]}`}>
+        <option.icon className="h-4 w-4" />
+      </div>
     );
   };
   
@@ -195,41 +191,6 @@ const Attendance: React.FC = () => {
   const handleEditAttendance = () => {
     // In a real app, this would navigate to an edit mode or show a different interface
     toast.info("Editing attendance for previous date");
-  };
-
-  // Quick status toggle for mobile
-  const handleQuickToggle = (studentId: number) => {
-    const student = attendanceList.find(s => s.id === studentId);
-    if (!student) return;
-    
-    let newStatus: string;
-    
-    // Cycle through statuses: present -> late -> absent -> permitted -> present
-    switch(student.status) {
-      case 'present': newStatus = 'late'; break;
-      case 'late': newStatus = 'absent'; break;
-      case 'absent': newStatus = 'permitted'; break;
-      case 'permitted': 
-      default: newStatus = 'present';
-    }
-    
-    handleAttendanceChange(studentId, newStatus);
-  };
-  
-  // Bulk marking with active status
-  const setStatusForSelected = (status: string) => {
-    if (activeStatus === status) {
-      setActiveStatus(null);
-    } else {
-      setActiveStatus(status);
-    }
-  };
-
-  // Apply the active status to a student when clicked
-  const handleStudentClick = (studentId: number) => {
-    if (!activeStatus) return;
-    
-    handleAttendanceChange(studentId, activeStatus);
   };
 
   return (
@@ -295,124 +256,87 @@ const Attendance: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* New UI: Direct attendance marking buttons */}
-            {dateStatus === "today" && (
-              <div className="mb-4 animate-fade-in" style={{ animationDelay: "100ms" }}>
-                <div className="flex flex-col gap-2">
-                  <p className="text-sm text-gray-600 mb-1">Quick Mark Mode:</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {attendanceOptions.map(option => (
-                      <Toggle
-                        key={option.value}
-                        pressed={activeStatus === option.value}
-                        onPressedChange={() => setStatusForSelected(option.value)}
-                        className={`flex-1 gap-1 border ${
-                          activeStatus === option.value 
-                            ? option.color
-                            : 'bg-white border-gray-200'
-                        } transition-all`}
-                      >
-                        <option.icon className="h-4 w-4" />
-                        <span className={`${isMobile ? 'text-xs' : 'text-sm'}`}>{option.label}</span>
-                      </Toggle>
-                    ))}
-                  </div>
-                  {activeStatus && (
-                    <p className="text-xs text-gray-500 mt-1 animate-fade-in">
-                      Click on a student to mark them as <span className="font-medium">{
-                        attendanceOptions.find(opt => opt.value === activeStatus)?.label
-                      }</span>
-                    </p>
-                  )}
-                </div>
-                
-                <div className="flex justify-between my-3">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="outline"
-                        size="sm"
-                        className="bg-emerald-50 border-emerald-200 hover:bg-emerald-100 text-emerald-700 transition-all"
-                      >
-                        <CheckCircle size={14} className="mr-2" />
-                        All Present
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="animate-scale-in max-w-xs mx-auto">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Mark all students present?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will mark all students as present for today.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleMarkAllPresent}>Continue</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setIsSelectMode(!isSelectMode)}
-                    className="text-xs transition-all hover:bg-gray-100 animate-fade-in"
-                  >
-                    {isSelectMode ? "Cancel Selection" : "Select Multiple"}
-                  </Button>
-                </div>
-                
-                {isSelectMode && selectedStudents.length > 0 && (
-                  <div className="flex gap-2 items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-gray-100 mb-3 animate-fade-in">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleSelectAll}
-                      className="text-xs transition-all hover:bg-gray-100"
-                    >
-                      {selectedStudents.length === sortedStudents.length ? "Deselect All" : "Select All"}
-                    </Button>
-                    
-                    <div className="flex gap-1 animate-fade-in">
-                      {attendanceOptions.map(option => (
-                        <Button
-                          key={option.value}
-                          size="sm"
-                          className={`${option.color} rounded-md transition-all`}
-                          onClick={() => handleBulkStatusChange(option.value)}
-                        >
-                          <option.icon size={14} />
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            
             {/* Status count pills - more subtle design */}
-            <div className="grid grid-cols-4 gap-1 mb-4 animate-fade-in" style={{ animationDelay: "150ms" }}>
-              {attendanceOptions.map((option, index) => {
+            <div className="grid grid-cols-4 gap-2 mb-4 animate-fade-in" style={{ animationDelay: "150ms" }}>
+              {attendanceOptions.map((option) => {
                 const count = statusCounts[option.value] || 0;
                 return (
                   <Card 
                     key={option.value} 
                     className={`border-none shadow-sm transition-all ${option.color.split(' ')[0]} bg-opacity-20`}
-                    style={{ animationDelay: `${200 + index * 50}ms` }}
                   >
                     <CardContent className="p-3 flex items-center justify-between">
-                      <div className="flex items-center">
-                        <option.icon size={isMobile ? 14 : 16} className={option.color.split(' ')[1]} />
-                        <span className="font-medium text-sm ml-2">{count}</span>
-                      </div>
-                      <span className="text-xs text-gray-600">
-                        {option.label}
-                      </span>
+                      <option.icon size={isMobile ? 16 : 18} className={option.color.split(' ')[1]} />
+                      <span className="font-medium text-sm">{count}</span>
                     </CardContent>
                   </Card>
                 );
               })}
             </div>
+            
+            {dateStatus === "today" && (
+              <div className="flex justify-between mb-4">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="bg-emerald-50 border-emerald-200 hover:bg-emerald-100 text-emerald-700 transition-all"
+                    >
+                      <CheckCircle size={14} className="mr-2" />
+                      All Present
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="animate-scale-in max-w-xs mx-auto">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Mark all students present?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will mark all students as present for today.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleMarkAllPresent}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setIsSelectMode(!isSelectMode)}
+                  className="text-xs transition-all hover:bg-gray-100 animate-fade-in"
+                >
+                  {isSelectMode ? "Cancel Selection" : "Select Multiple"}
+                </Button>
+              </div>
+            )}
+            
+            {isSelectMode && selectedStudents.length > 0 && (
+              <div className="flex gap-2 items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-gray-100 mb-3 animate-fade-in">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleSelectAll}
+                  className="text-xs transition-all hover:bg-gray-100"
+                >
+                  {selectedStudents.length === sortedStudents.length ? "Deselect All" : "Select All"}
+                </Button>
+                
+                <div className="flex gap-2 animate-fade-in">
+                  {attendanceOptions.map(option => (
+                    <Button
+                      key={option.value}
+                      size="sm"
+                      className={`${option.color} rounded-md transition-all`}
+                      onClick={() => handleBulkStatusChange(option.value)}
+                    >
+                      <option.icon size={14} />
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -425,19 +349,16 @@ const Attendance: React.FC = () => {
           
           return (
             <Card 
-              key={student.id} 
-              onClick={() => dateStatus === "today" && !isSelectMode ? handleStudentClick(student.id) : undefined}
+              key={student.id}
               className={`border border-gray-100 shadow-sm transition-all duration-200 
                 cursor-pointer hover:shadow ${isSelectMode && selectedStudents.includes(student.id) ? 'ring-1 ring-blue-400' : ''}
-                ${dateStatus === "today" && !isSelectMode && activeStatus ? 'hover:border-blue-300' : ''}
                 ${statusColorClass} bg-opacity-10`}
               style={{ animationDelay: `${300 + index * 20}ms` }}  
             >
               <CardContent className="p-3 flex items-center justify-between">
                 <div 
                   className={`flex items-center flex-1 ${dateStatus !== "future" && isSelectMode ? 'cursor-pointer' : ''}`} 
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={() => {
                     if (dateStatus !== "future" && isSelectMode) {
                       handleToggleSelect(student.id);
                     }
@@ -454,20 +375,14 @@ const Attendance: React.FC = () => {
                         {student.name}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500 flex items-center gap-2">
-                      <span>{student.rollNumber}</span>
-                      {getStatusBadge(student.status)}
-                    </div>
+                    <span className="text-xs text-gray-500">{student.rollNumber}</span>
                   </div>
                 </div>
                 
                 {dateStatus !== "future" && (isSelectMode ? (
                   <div 
                     className="w-5 h-5 rounded border flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-all" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggleSelect(student.id);
-                    }}
+                    onClick={() => handleToggleSelect(student.id)}
                   >
                     {selectedStudents.includes(student.id) && (
                       <CheckCircle className="w-4 h-4 text-blue-500" />
@@ -475,23 +390,28 @@ const Attendance: React.FC = () => {
                   </div>
                 ) : (
                   dateStatus === "today" && (
-                    <button
-                      className={`p-1.5 rounded-full transition-all active:scale-90 ${
-                        student.status === 'present' ? 'bg-emerald-100 text-emerald-700' : 
-                        student.status === 'absent' ? 'bg-rose-100 text-rose-700' :
-                        student.status === 'late' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleQuickToggle(student.id);
-                      }}
-                    >
-                      {student.status === 'present' ? <CheckCircle size={16} /> : 
-                       student.status === 'absent' ? <XCircle size={16} /> : 
-                       student.status === 'late' ? <Clock size={16} /> : <Calendar size={16} />}
-                    </button>
+                    <div className="flex space-x-1">
+                      {attendanceOptions.map(option => (
+                        <button
+                          key={option.value}
+                          className={`p-1.5 rounded-full transition-all active:scale-90 
+                            ${student.status === option.value 
+                              ? `${option.color.split(' ')[0]} ${option.color.split(' ')[1]}` 
+                              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                          onClick={() => handleAttendanceChange(student.id, option.value)}
+                        >
+                          <option.icon size={16} />
+                        </button>
+                      ))}
+                    </div>
                   )
                 ))}
+                
+                {dateStatus !== "today" && !isSelectMode && (
+                  <div className="flex items-center">
+                    {getStatusBadge(student.status)}
+                  </div>
+                )}
               </CardContent>
             </Card>
           );
