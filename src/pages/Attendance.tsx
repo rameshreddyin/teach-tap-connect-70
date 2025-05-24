@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Users, CheckCircle, XCircle, Clock, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Users, CheckCircle, XCircle, Clock, Calendar, Edit } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +62,19 @@ const Attendance: React.FC = () => {
     month: 'short', 
     year: 'numeric' 
   });
+  
+  // Determine if the selected date is today, in the past, or in the future
+  const dateStatus = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const selectedDate = new Date(date);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    if (selectedDate.getTime() === today.getTime()) return "today";
+    if (selectedDate < today) return "past";
+    return "future";
+  }, [date]);
   
   // Sort students: girls first, then boys
   const sortedStudents = useMemo(() => {
@@ -167,6 +180,11 @@ const Attendance: React.FC = () => {
     toast.success("All students marked present");
   };
 
+  const handleEditAttendance = () => {
+    // In a real app, this would navigate to an edit mode or show a different interface
+    toast.info("Editing attendance for previous date");
+  };
+
   return (
     <div className="page-container">
       <div className="flex items-center justify-between mb-4">
@@ -175,37 +193,39 @@ const Attendance: React.FC = () => {
           <h1 className="font-bold">Attendance</h1>
         </div>
         
-        {isSelectMode ? (
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleSelectAll}
-              className="text-xs"
-            >
-              {selectedStudents.length === sortedStudents.length ? "Deselect All" : "Select All"}
-            </Button>
+        {dateStatus !== "future" && (
+          isSelectMode ? (
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleSelectAll}
+                className="text-xs"
+              >
+                {selectedStudents.length === sortedStudents.length ? "Deselect All" : "Select All"}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => {
+                  setIsSelectMode(false);
+                  setSelectedStudents([]);
+                }}
+                className="text-xs"
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => {
-                setIsSelectMode(false);
-                setSelectedStudents([]);
-              }}
+              onClick={() => setIsSelectMode(true)}
               className="text-xs"
             >
-              Cancel
+              Select Multiple
             </Button>
-          </div>
-        ) : (
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => setIsSelectMode(true)}
-            className="text-xs"
-          >
-            Select Multiple
-          </Button>
+          )
         )}
       </div>
       
@@ -249,62 +269,85 @@ const Attendance: React.FC = () => {
           </div>
         </div>
         
-        {/* Quick Actions Bar */}
-        <div className="flex justify-between items-center mb-4 bg-gray-50 p-3 rounded-lg">
-          <div className="flex gap-2">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="bg-green-50 border-green-200 hover:bg-green-100 text-green-700"
-                >
-                  <CheckCircle size={16} />
-                  All Present
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Mark all students present?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will mark all students as present for today. Any existing attendance records will be overwritten.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleMarkAllPresent}>Continue</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+        {/* Status based UI - different for today/past/future */}
+        {dateStatus === "future" ? (
+          <div className="bg-gray-50 p-4 rounded-lg text-center my-8">
+            <Calendar size={40} className="mx-auto mb-2 text-gray-400" />
+            <p className="text-gray-500 font-medium">Cannot take attendance for future dates</p>
+            <p className="text-sm text-gray-400 mt-1">Please select today or a past date</p>
           </div>
-          
-          {isSelectMode && selectedStudents.length > 0 && (
-            <div className="flex gap-1">
+        ) : (
+          <>
+            {/* Quick Actions Bar */}
+            <div className="flex justify-between items-center mb-4 bg-gray-50 p-3 rounded-lg">
+              <div className="flex gap-2">
+                {dateStatus === "today" ? (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="bg-green-50 border-green-200 hover:bg-green-100 text-green-700"
+                      >
+                        <CheckCircle size={16} />
+                        All Present
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Mark all students present?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will mark all students as present for today. Any existing attendance records will be overwritten.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleMarkAllPresent}>Continue</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                ) : (
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-700"
+                    onClick={handleEditAttendance}
+                  >
+                    <Edit size={16} className="mr-1" />
+                    Edit Record
+                  </Button>
+                )}
+              </div>
+              
+              {isSelectMode && selectedStudents.length > 0 && dateStatus === "today" && (
+                <div className="flex gap-1">
+                  {attendanceOptions.map(option => (
+                    <Button
+                      key={option.value}
+                      size="sm"
+                      variant="ghost"
+                      className={`p-1.5 ${option.color} text-white rounded-md`}
+                      onClick={() => handleBulkStatusChange(option.value)}
+                    >
+                      <option.icon size={14} />
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Status Summary */}
+            <div className="flex justify-between gap-2 mb-4">
               {attendanceOptions.map(option => (
-                <Button
-                  key={option.value}
-                  size="sm"
-                  variant="ghost"
-                  className={`p-1.5 ${option.color} text-white rounded-md`}
-                  onClick={() => handleBulkStatusChange(option.value)}
-                >
-                  <option.icon size={14} />
-                </Button>
+                <div key={option.value} className="text-xs flex flex-col items-center">
+                  <span className={`${option.color} w-3 h-3 rounded-full mb-1`}></span>
+                  <span>{statusCounts[option.value] || 0}</span>
+                  <span>{option.label}</span>
+                </div>
               ))}
             </div>
-          )}
-        </div>
-        
-        {/* Status Summary */}
-        <div className="flex justify-between gap-2 mb-4">
-          {attendanceOptions.map(option => (
-            <div key={option.value} className="text-xs flex flex-col items-center">
-              <span className={`${option.color} w-3 h-3 rounded-full mb-1`}></span>
-              <span>{statusCounts[option.value] || 0}</span>
-              <span>{option.label}</span>
-            </div>
-          ))}
-        </div>
+          </>
+        )}
       </div>
       
       <div className="space-y-3 mb-8">
@@ -312,7 +355,7 @@ const Attendance: React.FC = () => {
           <Card key={student.id} className={`border-none bg-teacherApp-card ${isSelectMode && selectedStudents.includes(student.id) ? 'ring-2 ring-blue-400' : ''}`}>
             <CardContent className="p-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center flex-1" onClick={() => isSelectMode && handleToggleSelect(student.id)}>
+                <div className="flex items-center flex-1" onClick={() => dateStatus !== "future" && isSelectMode && handleToggleSelect(student.id)}>
                   <Avatar className="h-9 w-9 mr-3">
                     <AvatarFallback className={`text-xs bg-gray-200 ${student.gender === 'female' ? 'text-pink-500' : 'text-blue-500'}`}>
                       {student.initials}
@@ -327,37 +370,59 @@ const Attendance: React.FC = () => {
                   </div>
                 </div>
                 
-                {isSelectMode ? (
+                {dateStatus !== "future" && (isSelectMode ? (
                   <div className="w-5 h-5 rounded border flex items-center justify-center" onClick={() => handleToggleSelect(student.id)}>
                     {selectedStudents.includes(student.id) && <CheckCircle className="w-4 h-4 text-blue-500" />}
                   </div>
                 ) : (
                   <div className="flex gap-1">
-                    {attendanceOptions.map(option => (
-                      <button
-                        key={option.value}
-                        className={`p-1.5 rounded-md ${student.status === option.value ? option.color : 'bg-gray-100'} 
-                                  ${student.status === option.value ? 'text-white' : 'text-gray-500'}
-                                  transition-colors hover:opacity-90`}
-                        onClick={() => handleAttendanceChange(student.id, option.value)}
+                    {dateStatus === "today" ? (
+                      attendanceOptions.map(option => (
+                        <button
+                          key={option.value}
+                          className={`p-1.5 rounded-md ${student.status === option.value ? option.color : 'bg-gray-100'} 
+                                    ${student.status === option.value ? 'text-white' : 'text-gray-500'}
+                                    transition-colors hover:opacity-90`}
+                          onClick={() => handleAttendanceChange(student.id, option.value)}
+                        >
+                          <option.icon size={14} />
+                        </button>
+                      ))
+                    ) : (
+                      <Button 
+                        size="sm"
+                        variant="ghost"
+                        className="p-1 text-blue-500 hover:text-blue-700"
+                        onClick={handleEditAttendance}
                       >
-                        <option.icon size={14} />
-                      </button>
-                    ))}
+                        <Edit size={14} />
+                      </Button>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
       
-      <Button 
-        className="w-full bg-teacherApp-accent hover:bg-black text-white"
-        onClick={handleSubmit}
-      >
-        Submit Attendance
-      </Button>
+      {dateStatus === "today" && (
+        <Button 
+          className="w-full bg-teacherApp-accent hover:bg-black text-white"
+          onClick={handleSubmit}
+        >
+          Submit Attendance
+        </Button>
+      )}
+      
+      {dateStatus === "past" && (
+        <Button 
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+          onClick={handleSubmit}
+        >
+          Update Attendance
+        </Button>
+      )}
     </div>
   );
 };
