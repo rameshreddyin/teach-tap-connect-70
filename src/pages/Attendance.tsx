@@ -193,7 +193,7 @@ const Attendance: React.FC = () => {
   };
 
   return (
-    <div className="page-container pb-32 max-w-lg mx-auto animate-fade-in">
+    <div className="page-container max-w-lg mx-auto animate-fade-in">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Users size={isMobile ? 18 : 20} className="text-gray-800" />
@@ -340,8 +340,8 @@ const Attendance: React.FC = () => {
         )}
       </div>
       
-      {/* Student List - Optimized and more modern */}
-      <div className="space-y-1.5 mb-6">
+      {/* Student List - with proper bottom spacing */}
+      <div className="space-y-1.5 mb-6 pb-24">
         {sortedStudents.map((student, index) => {
           const statusOption = attendanceOptions.find(opt => opt.value === student.status);
           const statusColorClass = statusOption ? statusOption.color.split(' ')[0] : 'bg-white';
@@ -417,9 +417,9 @@ const Attendance: React.FC = () => {
         })}
       </div>
       
-      {/* Fixed bottom button - improved positioning and styling */}
+      {/* Fixed bottom button */}
       {dateStatus !== "future" && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-lg z-50 safe-area-inset-bottom">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-lg z-50">
           <div className="p-4 max-w-lg mx-auto">
             <Button 
               className="w-full bg-black hover:bg-gray-800 text-white shadow-md transition-all animate-scale-in h-12 font-medium"

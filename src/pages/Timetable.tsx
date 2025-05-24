@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -126,7 +127,7 @@ const Timetable: React.FC = () => {
   };
 
   return (
-    <div className="page-container bg-white min-h-screen p-4">
+    <div className="page-container bg-white min-h-screen pb-20">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">My Schedule</h1>
         <p className="text-gray-500">Your personalized teaching timetable</p>
@@ -150,7 +151,7 @@ const Timetable: React.FC = () => {
         </TabsList>
         
         {weekdays.map((day) => (
-          <TabsContent key={day} value={day} className="mt-0 space-y-4">
+          <TabsContent key={day} value={day} className="mt-0 space-y-4 pb-8">
             {timetableData[day as keyof typeof timetableData].map((period, index) => {
               const timeStatus = getTimeStatus(period.time);
               
