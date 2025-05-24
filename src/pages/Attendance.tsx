@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Users, CheckCircle, XCircle, Clock, Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // Enhanced mock data for students with roll numbers and gender
 const students = [
@@ -32,16 +43,18 @@ const students = [
 
 // Attendance status options with color coding
 const attendanceOptions = [
-  { value: "present", label: "Present", color: "bg-green-500" },
-  { value: "late", label: "Late", color: "bg-amber-500" },
-  { value: "absent", label: "Absent", color: "bg-red-500" },
-  { value: "permitted", label: "Permitted", color: "bg-blue-500" }
+  { value: "present", label: "Present", color: "bg-green-500", icon: CheckCircle },
+  { value: "late", label: "Late", color: "bg-amber-500", icon: Clock },
+  { value: "absent", label: "Absent", color: "bg-red-500", icon: XCircle },
+  { value: "permitted", label: "Permitted", color: "bg-blue-500", icon: Calendar }
 ];
 
 const Attendance: React.FC = () => {
   const [attendanceList, setAttendanceList] = useState(students);
   const [selectedClass, setSelectedClass] = useState("9A");
   const [date, setDate] = useState(new Date());
+  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
+  const [isSelectMode, setIsSelectMode] = useState(false);
   
   const formattedDate = date.toLocaleDateString('en-US', { 
     weekday: 'short',
@@ -96,6 +109,39 @@ const Attendance: React.FC = () => {
     }
   };
   
+  const handleBulkStatusChange = (status: string) => {
+    if (selectedStudents.length === 0) return;
+    
+    setAttendanceList(
+      attendanceList.map(student => 
+        selectedStudents.includes(student.id) ? { ...student, status } : student
+      )
+    );
+    
+    const option = attendanceOptions.find(opt => opt.value === status);
+    if (option) {
+      toast.success(`Marked ${selectedStudents.length} students as ${option.label}`);
+      setSelectedStudents([]);
+      setIsSelectMode(false);
+    }
+  };
+  
+  const handleToggleSelect = (studentId: number) => {
+    setSelectedStudents(prev => 
+      prev.includes(studentId)
+        ? prev.filter(id => id !== studentId)
+        : [...prev, studentId]
+    );
+  };
+  
+  const handleSelectAll = () => {
+    if (selectedStudents.length === sortedStudents.length) {
+      setSelectedStudents([]);
+    } else {
+      setSelectedStudents(sortedStudents.map(s => s.id));
+    }
+  };
+  
   const handleSubmit = () => {
     toast.success("Attendance submitted successfully");
     // In a real app, this would send data to a server
@@ -112,12 +158,55 @@ const Attendance: React.FC = () => {
       </Badge>
     );
   };
+  
+  // Quick mark all students as present
+  const handleMarkAllPresent = () => {
+    setAttendanceList(
+      attendanceList.map(student => ({ ...student, status: 'present' }))
+    );
+    toast.success("All students marked present");
+  };
 
   return (
     <div className="page-container">
-      <div className="flex items-center gap-2 mb-4">
-        <Users size={20} />
-        <h1 className="font-bold">Attendance</h1>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Users size={20} />
+          <h1 className="font-bold">Attendance</h1>
+        </div>
+        
+        {isSelectMode ? (
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleSelectAll}
+              className="text-xs"
+            >
+              {selectedStudents.length === sortedStudents.length ? "Deselect All" : "Select All"}
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => {
+                setIsSelectMode(false);
+                setSelectedStudents([]);
+              }}
+              className="text-xs"
+            >
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setIsSelectMode(true)}
+            className="text-xs"
+          >
+            Select Multiple
+          </Button>
+        )}
       </div>
       
       <div className="mb-6">
@@ -160,6 +249,53 @@ const Attendance: React.FC = () => {
           </div>
         </div>
         
+        {/* Quick Actions Bar */}
+        <div className="flex justify-between items-center mb-4 bg-gray-50 p-3 rounded-lg">
+          <div className="flex gap-2">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="bg-green-50 border-green-200 hover:bg-green-100 text-green-700"
+                >
+                  <CheckCircle size={16} />
+                  All Present
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Mark all students present?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will mark all students as present for today. Any existing attendance records will be overwritten.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleMarkAllPresent}>Continue</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+          
+          {isSelectMode && selectedStudents.length > 0 && (
+            <div className="flex gap-1">
+              {attendanceOptions.map(option => (
+                <Button
+                  key={option.value}
+                  size="sm"
+                  variant="ghost"
+                  className={`p-1.5 ${option.color} text-white rounded-md`}
+                  onClick={() => handleBulkStatusChange(option.value)}
+                >
+                  <option.icon size={14} />
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {/* Status Summary */}
         <div className="flex justify-between gap-2 mb-4">
           {attendanceOptions.map(option => (
             <div key={option.value} className="text-xs flex flex-col items-center">
@@ -173,10 +309,10 @@ const Attendance: React.FC = () => {
       
       <div className="space-y-3 mb-8">
         {sortedStudents.map((student) => (
-          <Card key={student.id} className="border-none bg-teacherApp-card">
-            <CardContent className="p-4">
+          <Card key={student.id} className={`border-none bg-teacherApp-card ${isSelectMode && selectedStudents.includes(student.id) ? 'ring-2 ring-blue-400' : ''}`}>
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
+                <div className="flex items-center flex-1" onClick={() => isSelectMode && handleToggleSelect(student.id)}>
                   <Avatar className="h-9 w-9 mr-3">
                     <AvatarFallback className={`text-xs bg-gray-200 ${student.gender === 'female' ? 'text-pink-500' : 'text-blue-500'}`}>
                       {student.initials}
@@ -191,28 +327,25 @@ const Attendance: React.FC = () => {
                   </div>
                 </div>
                 
-                <Select
-                  value={student.status}
-                  onValueChange={(value) => handleAttendanceChange(student.id, value)}
-                >
-                  <SelectTrigger className="w-32 h-8 text-xs">
-                    <SelectValue placeholder="Mark" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {attendanceOptions.map((option) => (
-                      <SelectItem 
-                        key={option.value} 
-                        value={option.value}
-                        className="text-xs flex items-center"
+                {isSelectMode ? (
+                  <div className="w-5 h-5 rounded border flex items-center justify-center" onClick={() => handleToggleSelect(student.id)}>
+                    {selectedStudents.includes(student.id) && <CheckCircle className="w-4 h-4 text-blue-500" />}
+                  </div>
+                ) : (
+                  <div className="flex gap-1">
+                    {attendanceOptions.map(option => (
+                      <button
+                        key={option.value}
+                        className={`p-1.5 rounded-md ${student.status === option.value ? option.color : 'bg-gray-100'} 
+                                  ${student.status === option.value ? 'text-white' : 'text-gray-500'}
+                                  transition-colors hover:opacity-90`}
+                        onClick={() => handleAttendanceChange(student.id, option.value)}
                       >
-                        <div className="flex items-center">
-                          <span className={`w-2 h-2 rounded-full ${option.color} mr-2`}></span>
-                          {option.label}
-                        </div>
-                      </SelectItem>
+                        <option.icon size={14} />
+                      </button>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
