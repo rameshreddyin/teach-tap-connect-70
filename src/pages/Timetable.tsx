@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock } from 'lucide-react';
+import { Clock, MapPin, Users } from 'lucide-react';
 
 // Mock data for timetable
 const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -138,44 +138,43 @@ const Timetable: React.FC = () => {
   const getCardClass = (timeStatus: string) => {
     switch (timeStatus) {
       case 'current':
-        return 'bg-blue-50 border-l-4 border-blue-500 shadow-md';
+        return 'bg-gradient-to-r from-blue-50 to-blue-100 border-none shadow-lg scale-[1.02]';
       case 'upcoming':
-        return 'bg-white border-l-4 border-gray-300';
+        return 'bg-white border-none shadow-md hover:shadow-lg';
       case 'past':
-        return 'bg-gray-50 border-l-4 border-gray-200 opacity-75';
+        return 'bg-gray-50 border-none shadow-sm opacity-70';
       default:
-        return 'bg-white border-l-4 border-gray-200';
+        return 'bg-white border-none shadow-md';
     }
   };
-  
-  // Get class for time badge
-  const getTimeBadgeClass = (timeStatus: string) => {
-    switch (timeStatus) {
-      case 'current':
-        return 'bg-blue-500 text-white';
-      case 'upcoming':
-        return 'bg-gray-200 text-gray-800';
-      case 'past':
-        return 'bg-gray-100 text-gray-600';
-      default:
-        return 'bg-gray-100 text-gray-600';
-    }
+
+  const getSubjectGradient = (subject: string) => {
+    if (subject.includes('Mathematics')) return 'from-blue-500 to-blue-600';
+    if (subject.includes('Free Period')) return 'from-green-500 to-green-600';
+    if (subject.includes('Meeting')) return 'from-purple-500 to-purple-600';
+    if (subject.includes('Training')) return 'from-orange-500 to-orange-600';
+    return 'from-gray-500 to-gray-600';
   };
 
   return (
     <div className="page-container">
-      <h1 className="text-2xl font-medium mb-6 text-gray-900">My Schedule</h1>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-2">
+          My Schedule
+        </h1>
+        <p className="text-gray-500">Your weekly teaching timetable</p>
+      </div>
       
       <Tabs defaultValue={defaultDay} onValueChange={setActiveDay} className="w-full">
-        <TabsList className="grid grid-cols-6 mb-6 rounded-xl bg-gray-100 p-1 w-full">
+        <TabsList className="grid grid-cols-6 mb-6 rounded-2xl bg-gray-100 p-1.5 w-full h-14">
           {weekdays.map((day) => (
             <TabsTrigger
               key={day}
               value={day}
-              className={`rounded-lg text-sm py-2 font-medium transition-all 
+              className={`rounded-xl text-sm py-3 font-semibold transition-all duration-300
               ${day === activeDay 
-                ? 'bg-white shadow-sm text-gray-900' 
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white shadow-lg text-gray-900 scale-105' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
               }`}
             >
               {day.substring(0, 3)}
@@ -191,40 +190,45 @@ const Timetable: React.FC = () => {
               return (
                 <Card 
                   key={index}
-                  className={`overflow-hidden border-none rounded-xl ${getCardClass(timeStatus)}`}
+                  className={`overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.01] ${getCardClass(timeStatus)}`}
                 >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className={`font-medium text-gray-900 ${timeStatus === 'past' ? 'text-gray-500' : ''}`}>
-                          {period.subject}
-                        </h3>
-                        
-                        {period.class && (
-                          <div className={`text-sm mt-1 ${timeStatus === 'past' ? 'text-gray-400' : 'text-gray-700'}`}>
-                            {period.class}
+                  <CardContent className="p-0">
+                    <div className={`h-1.5 bg-gradient-to-r ${getSubjectGradient(period.subject)}`}></div>
+                    <div className="p-5">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className={`font-bold text-lg ${timeStatus === 'past' ? 'text-gray-500' : 'text-gray-900'}`}>
+                              {period.subject}
+                            </h3>
+                            {timeStatus === 'current' && (
+                              <div className="flex items-center gap-1 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                                <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                                Live
+                              </div>
+                            )}
                           </div>
-                        )}
-                        
-                        <div className="flex items-center mt-2">
-                          <span 
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs ${getTimeBadgeClass(timeStatus)}`}
-                          >
-                            <Clock size={10} className="mr-1" />
-                            {period.time}
-                          </span>
-                        </div>
-                        
-                        <div className={`text-xs mt-2 ${
-                          timeStatus === 'past' ? 'text-gray-400' : 'text-gray-500'
-                        }`}>
-                          {period.room}
+                          
+                          {period.class && (
+                            <div className={`flex items-center mb-3 ${timeStatus === 'past' ? 'text-gray-400' : 'text-gray-700'}`}>
+                              <Users size={16} className="mr-2" />
+                              <span className="font-medium">{period.class}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center text-sm text-gray-600">
+                              <Clock size={14} className="mr-2" />
+                              <span>{period.time}</span>
+                            </div>
+                            
+                            <div className="flex items-center text-sm text-gray-600">
+                              <MapPin size={14} className="mr-2" />
+                              <span>{period.room}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-
-                      {timeStatus === 'current' && (
-                        <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse" />
-                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -232,8 +236,12 @@ const Timetable: React.FC = () => {
             })}
             
             {timetableData[day as keyof typeof timetableData].length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No classes scheduled for this day.
+              <div className="text-center py-12">
+                <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="text-gray-500 font-medium">No classes scheduled</p>
+                <p className="text-gray-400 text-sm">Enjoy your free day!</p>
               </div>
             )}
           </TabsContent>

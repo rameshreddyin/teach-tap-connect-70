@@ -54,41 +54,37 @@ const Dashboard: React.FC = () => {
     { time: "1:30 PM - 2:15 PM", subject: "Mathematics", class: "Class 8C", room: "Room 105", status: "upcoming" },
   ];
   
-  const attendanceStats = {
-    total: 120,
-    present: 112,
-    percentage: 93
-  };
-  
   const quickMenuItems = [
-    { icon: ListChecks, label: "Attendance", route: "/attendance", color: "bg-blue-100 text-blue-600" },
-    { icon: Bell, label: "Announcements", route: "/announcements", color: "bg-amber-100 text-amber-600" },
-    { icon: CalendarDays, label: "Timetable", route: "/timetable", color: "bg-violet-100 text-violet-600" },
-    { icon: BookOpen, label: "Lessons", route: "#", color: "bg-emerald-100 text-emerald-600" },
-    { icon: Users, label: "Students", route: "#", color: "bg-rose-100 text-rose-600" },
-    { icon: ClipboardList, label: "Reports", route: "#", color: "bg-sky-100 text-sky-600" }
+    { icon: ListChecks, label: "Attendance", route: "/attendance", gradient: "from-blue-500 to-blue-600" },
+    { icon: Bell, label: "Announcements", route: "/announcements", gradient: "from-amber-500 to-orange-500" },
+    { icon: CalendarDays, label: "Timetable", route: "/timetable", gradient: "from-violet-500 to-purple-600" },
+    { icon: BookOpen, label: "Lessons", route: "#", gradient: "from-emerald-500 to-green-600" },
+    { icon: Users, label: "Students", route: "#", gradient: "from-rose-500 to-pink-600" },
+    { icon: ClipboardList, label: "Reports", route: "#", gradient: "from-sky-500 to-cyan-600" }
   ];
   
   return (
     <div className="page-container">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p className="text-gray-500 text-sm">{formattedDate}</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            Welcome Back
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">{formattedDate}</p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Avatar className="h-10 w-10 cursor-pointer ring-2 ring-blue-100">
-              <AvatarFallback className="bg-blue-500 text-white font-medium">MS</AvatarFallback>
+            <Avatar className="h-12 w-12 cursor-pointer ring-4 ring-blue-100 hover:ring-blue-200 transition-all">
+              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold text-lg">MS</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <div className="flex items-center gap-2 p-2 border-b">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-blue-500 text-white">MS</AvatarFallback>
+          <DropdownMenuContent align="end" className="w-56 bg-white/95 backdrop-blur-sm border-gray-200/50">
+            <div className="flex items-center gap-3 p-3 border-b border-gray-100">
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">MS</AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium">Ms. Smith</p>
+                <p className="text-sm font-semibold">Ms. Smith</p>
                 <p className="text-xs text-gray-500">Mathematics Department</p>
               </div>
             </div>
@@ -101,51 +97,56 @@ const Dashboard: React.FC = () => {
       </div>
       
       {/* School Day Progress */}
-      <section className="mb-6">
-        <Card className="bg-white border border-gray-100 shadow-sm rounded-xl overflow-hidden">
-          <CardContent className="p-4">
-            <div className="mb-3 flex justify-between items-center">
-              <p className="text-sm text-gray-500">School Day Progress</p>
-              <p className="text-sm font-medium">{formattedTime}</p>
+      <section className="mb-8">
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-none shadow-lg rounded-2xl overflow-hidden">
+          <CardContent className="p-6">
+            <div className="mb-4 flex justify-between items-center">
+              <div>
+                <p className="text-sm font-medium text-blue-700">School Day Progress</p>
+                <p className="text-xs text-blue-600 mt-1">8:30 AM - 3:30 PM</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-blue-800">{formattedTime}</p>
+                <p className="text-xs text-blue-600">{Math.round(progress)}% Complete</p>
+              </div>
             </div>
-            <Progress value={progress} className="h-2 bg-gray-100" indicatorClassName="bg-blue-500" />
-            <div className="flex justify-between mt-2 text-xs text-gray-500">
-              <span>8:30 AM</span>
-              <span>3:30 PM</span>
-            </div>
+            <Progress value={progress} className="h-3 bg-blue-200/50" indicatorClassName="bg-gradient-to-r from-blue-500 to-blue-600" />
           </CardContent>
         </Card>
       </section>
       
       {/* Today's Schedule */}
-      <section className="mb-6">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-lg font-medium">Today's Classes</h2>
-          <Link to="/timetable" className="text-sm text-blue-500">
-            Full Schedule
+      <section className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Today's Classes</h2>
+          <Link to="/timetable" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+            View All
           </Link>
         </div>
         
         <div className="space-y-3">
           {todayClasses.map((session, index) => (
-            <Card key={index} className={`border-none rounded-xl ${
-              session.status === 'current' ? 'bg-blue-50 border-l-4 border-blue-500' : 
-              session.status === 'completed' ? 'bg-gray-50 opacity-75' : 'bg-white'
+            <Card key={index} className={`border-none rounded-2xl shadow-sm hover:shadow-md transition-all ${
+              session.status === 'current' ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500' : 
+              session.status === 'completed' ? 'bg-gray-50 opacity-80' : 'bg-white hover:bg-gray-50'
             }`}>
-              <CardContent className="p-3 flex items-center justify-between">
-                <div>
-                  <div className="font-medium">{session.subject}</div>
-                  <div className="text-sm text-gray-600">{session.class}</div>
-                  <div className="flex items-center text-xs text-gray-500 mt-1">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-900">{session.subject}</div>
+                  <div className="text-sm text-gray-600 mt-1">{session.class}</div>
+                  <div className="flex items-center text-xs text-gray-500 mt-2">
                     <Clock size={12} className="mr-1" />
                     <span>{session.time}</span>
-                    <span className="mx-1">•</span>
+                    <span className="mx-2">•</span>
                     <span>{session.room}</span>
                   </div>
                 </div>
                 
                 {session.status === 'current' && (
-                  <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse" />
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse" />
+                    <span className="text-xs font-medium text-blue-600">Live</span>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -153,37 +154,23 @@ const Dashboard: React.FC = () => {
         </div>
       </section>
       
-      {/* Attendance Stats */}
-      <section className="mb-6">
-        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none rounded-xl overflow-hidden">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium mb-1">Today's Attendance</h3>
-                <p className="text-xs text-blue-100">All Classes</p>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-semibold">{attendanceStats.percentage}%</div>
-                <p className="text-xs text-blue-100">{attendanceStats.present}/{attendanceStats.total} Students</p>
-              </div>
-            </div>
-            <Progress value={attendanceStats.percentage} className="h-2 mt-3 bg-blue-400/30" indicatorClassName="bg-white" />
-          </CardContent>
-        </Card>
-      </section>
-      
       {/* Quick Menu */}
       <section>
-        <h2 className="text-lg font-medium mb-3">Quick Access</h2>
-        <div className="grid grid-cols-3 gap-3">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Access</h2>
+        <div className="grid grid-cols-2 gap-4">
           {quickMenuItems.map((item, index) => (
             <Link to={item.route} key={index} className="block">
-              <Card className="border-none rounded-xl overflow-hidden hover:shadow-md transition-shadow h-24">
-                <CardContent className="p-0 flex flex-col items-center justify-center h-full">
-                  <div className={`p-2 rounded-full ${item.color} mb-1`}>
-                    <item.icon size={20} />
+              <Card className="border-none rounded-3xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-105 h-28">
+                <CardContent className="p-0 h-full">
+                  <div className={`h-full flex flex-col items-center justify-center bg-gradient-to-br ${item.gradient} text-white relative overflow-hidden`}>
+                    <div className="absolute inset-0 bg-black/5"></div>
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="p-3 rounded-full bg-white/20 backdrop-blur-sm mb-2">
+                        <item.icon size={24} className="text-white" />
+                      </div>
+                      <p className="text-sm font-semibold text-center">{item.label}</p>
+                    </div>
                   </div>
-                  <p className="text-xs font-medium">{item.label}</p>
                 </CardContent>
               </Card>
             </Link>
