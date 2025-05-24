@@ -183,14 +183,14 @@ const Announcements: React.FC = () => {
                       <Calendar className="h-4 w-4 text-gray-500" />
                       <span className="font-medium text-gray-900">{date}</span>
                       <Badge variant="outline" className="bg-gray-100 text-gray-600">
-                        {dayAnnouncements.length} announcements
+                        {(dayAnnouncements as any[]).length} announcements
                       </Badge>
                     </div>
                     <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${expandedGroups.has(date) ? 'rotate-180' : ''}`} />
                   </CollapsibleTrigger>
                   
                   <CollapsibleContent className="mt-2 space-y-3 animate-accordion-down">
-                    {dayAnnouncements.map((announcement, index) => (
+                    {(dayAnnouncements as any[]).map((announcement, index) => (
                       <Card 
                         key={announcement.id}
                         className="border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 ml-4"
