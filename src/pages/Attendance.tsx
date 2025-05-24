@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Select,
@@ -16,18 +16,26 @@ import { toast } from "sonner";
 
 // Enhanced mock data for students with roll numbers and gender
 const students = [
-  { id: 1, name: "Aiden Cooper", rollNumber: "B101", gender: "male", present: true, initials: "AC" },
-  { id: 2, name: "Brooke Davis", rollNumber: "G101", gender: "female", present: false, initials: "BD" },
-  { id: 3, name: "Carlos Garcia", rollNumber: "B102", gender: "male", present: true, initials: "CG" },
-  { id: 4, name: "Dina Martinez", rollNumber: "G102", gender: "female", present: true, initials: "DM" },
-  { id: 5, name: "Elijah Jones", rollNumber: "B103", gender: "male", present: true, initials: "EJ" },
-  { id: 6, name: "Fatima Khan", rollNumber: "G103", gender: "female", present: false, initials: "FK" },
-  { id: 7, name: "George Wilson", rollNumber: "B104", gender: "male", present: true, initials: "GW" },
-  { id: 8, name: "Hannah Lee", rollNumber: "G104", gender: "female", present: true, initials: "HL" },
-  { id: 9, name: "Isaac Newton", rollNumber: "B105", gender: "male", present: true, initials: "IN" },
-  { id: 10, name: "Julia Smith", rollNumber: "G105", gender: "female", present: false, initials: "JS" },
-  { id: 11, name: "Kevin Patel", rollNumber: "B106", gender: "male", present: true, initials: "KP" },
-  { id: 12, name: "Layla Williams", rollNumber: "G106", gender: "female", present: true, initials: "LW" },
+  { id: 1, name: "Aiden Cooper", rollNumber: "B101", gender: "male", status: "present", initials: "AC" },
+  { id: 2, name: "Brooke Davis", rollNumber: "G101", gender: "female", status: "absent", initials: "BD" },
+  { id: 3, name: "Carlos Garcia", rollNumber: "B102", gender: "male", status: "present", initials: "CG" },
+  { id: 4, name: "Dina Martinez", rollNumber: "G102", gender: "female", status: "present", initials: "DM" },
+  { id: 5, name: "Elijah Jones", rollNumber: "B103", gender: "male", status: "present", initials: "EJ" },
+  { id: 6, name: "Fatima Khan", rollNumber: "G103", gender: "female", status: "absent", initials: "FK" },
+  { id: 7, name: "George Wilson", rollNumber: "B104", gender: "male", status: "present", initials: "GW" },
+  { id: 8, name: "Hannah Lee", rollNumber: "G104", gender: "female", status: "present", initials: "HL" },
+  { id: 9, name: "Isaac Newton", rollNumber: "B105", gender: "male", status: "present", initials: "IN" },
+  { id: 10, name: "Julia Smith", rollNumber: "G105", gender: "female", status: "late", initials: "JS" },
+  { id: 11, name: "Kevin Patel", rollNumber: "B106", gender: "male", status: "present", initials: "KP" },
+  { id: 12, name: "Layla Williams", rollNumber: "G106", gender: "female", status: "permitted", initials: "LW" },
+];
+
+// Attendance status options with color coding
+const attendanceOptions = [
+  { value: "present", label: "Present", color: "bg-green-500" },
+  { value: "late", label: "Late", color: "bg-amber-500" },
+  { value: "absent", label: "Absent", color: "bg-red-500" },
+  { value: "permitted", label: "Permitted", color: "bg-blue-500" }
 ];
 
 const Attendance: React.FC = () => {
@@ -66,17 +74,43 @@ const Attendance: React.FC = () => {
     setDate(nextDay);
   };
   
-  const handleAttendanceChange = (studentId: number, isPresent: boolean) => {
+  // Get the count of students by status
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = { present: 0, absent: 0, late: 0, permitted: 0 };
+    attendanceList.forEach(student => {
+      counts[student.status] = (counts[student.status] || 0) + 1;
+    });
+    return counts;
+  }, [attendanceList]);
+  
+  const handleAttendanceChange = (studentId: number, status: string) => {
     setAttendanceList(
       attendanceList.map(student => 
-        student.id === studentId ? { ...student, present: isPresent } : student
+        student.id === studentId ? { ...student, status } : student
       )
     );
+    
+    const option = attendanceOptions.find(opt => opt.value === status);
+    if (option) {
+      toast.success(`Marked ${option.label}`);
+    }
   };
   
   const handleSubmit = () => {
     toast.success("Attendance submitted successfully");
     // In a real app, this would send data to a server
+  };
+  
+  // Get the appropriate badge for a student's status
+  const getStatusBadge = (status: string) => {
+    const option = attendanceOptions.find(opt => opt.value === status);
+    if (!option) return null;
+    
+    return (
+      <Badge className={`${option.color} text-white`}>
+        {option.label}
+      </Badge>
+    );
   };
 
   return (
@@ -105,7 +139,7 @@ const Attendance: React.FC = () => {
           </Button>
         </div>
         
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-4">
           <Select
             value={selectedClass}
             onValueChange={setSelectedClass}
@@ -122,8 +156,18 @@ const Attendance: React.FC = () => {
           </Select>
           
           <div className="text-sm text-teacherApp-textLight">
-            <span className="font-medium text-green-600">{sortedStudents.filter(s => s.present).length}</span> / {sortedStudents.length} present
+            <span className="font-medium text-green-600">{statusCounts.present}</span> / {sortedStudents.length} present
           </div>
+        </div>
+        
+        <div className="flex justify-between gap-2 mb-4">
+          {attendanceOptions.map(option => (
+            <div key={option.value} className="text-xs flex flex-col items-center">
+              <span className={`${option.color} w-3 h-3 rounded-full mb-1`}></span>
+              <span>{statusCounts[option.value] || 0}</span>
+              <span>{option.label}</span>
+            </div>
+          ))}
         </div>
       </div>
       
@@ -139,14 +183,36 @@ const Attendance: React.FC = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <span className="font-medium">{student.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{student.name}</span>
+                      {getStatusBadge(student.status)}
+                    </div>
                     <div className="text-xs text-gray-500">{student.rollNumber}</div>
                   </div>
                 </div>
-                <Switch 
-                  checked={student.present} 
-                  onCheckedChange={(checked) => handleAttendanceChange(student.id, checked)}
-                />
+                
+                <Select
+                  value={student.status}
+                  onValueChange={(value) => handleAttendanceChange(student.id, value)}
+                >
+                  <SelectTrigger className="w-32 h-8 text-xs">
+                    <SelectValue placeholder="Mark" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {attendanceOptions.map((option) => (
+                      <SelectItem 
+                        key={option.value} 
+                        value={option.value}
+                        className="text-xs flex items-center"
+                      >
+                        <div className="flex items-center">
+                          <span className={`w-2 h-2 rounded-full ${option.color} mr-2`}></span>
+                          {option.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
