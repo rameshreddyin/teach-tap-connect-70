@@ -7,11 +7,11 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, Lock, Shield } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { useSecureForm } from '../hooks/useSecureForm';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const navigate = useNavigate();
@@ -38,9 +38,7 @@ const Login: React.FC = () => {
     return true;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSecureLogin = async (data: any, csrfToken: string) => {
     if (!validateInput()) return;
     
     // Check for too many failed attempts
@@ -49,23 +47,32 @@ const Login: React.FC = () => {
       return;
     }
     
-    setIsLoading(true);
+    // Simulate secure login with CSRF token
+    console.log('CSRF Token:', csrfToken);
     
     // Mock login with security simulation
-    setTimeout(() => {
-      setIsLoading(false);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Demo credentials for security demo
+    if (email === "teacher@school.edu" && password === "secure123") {
+      toast.success("Login successful");
+      setFailedAttempts(0);
       
-      // Demo credentials for security demo
-      if (email === "teacher@school.edu" && password === "secure123") {
-        toast.success("Login successful");
-        setFailedAttempts(0);
-        navigate('/dashboard');
-      } else {
-        setFailedAttempts(prev => prev + 1);
-        toast.error(`Invalid credentials. ${3 - failedAttempts - 1} attempts remaining.`);
-      }
-    }, 1500);
+      // Set secure session data
+      localStorage.setItem('user_authenticated', 'true');
+      localStorage.setItem('login_timestamp', Date.now().toString());
+      
+      navigate('/dashboard');
+    } else {
+      setFailedAttempts(prev => prev + 1);
+      toast.error(`Invalid credentials. ${3 - failedAttempts - 1} attempts remaining.`);
+    }
   };
+
+  const { handleSecureSubmit, isSubmitting } = useSecureForm({
+    onSubmit: handleSecureLogin,
+    sanitizeInput: true
+  });
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gray-50">
@@ -83,7 +90,7 @@ const Login: React.FC = () => {
             <CardTitle className="text-2xl font-bold text-center text-gray-900">Welcome back</CardTitle>
             <p className="text-sm text-gray-600 text-center">Enter your credentials to sign in</p>
           </CardHeader>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSecureSubmit}>
             <CardContent className="space-y-4 pt-2">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-gray-900">
@@ -93,6 +100,7 @@ const Login: React.FC = () => {
                   <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -116,6 +124,7 @@ const Login: React.FC = () => {
                   <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                   <Input
                     id="password"
+                    name="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -144,9 +153,9 @@ const Login: React.FC = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5"
-                disabled={isLoading || failedAttempts >= 3}
+                disabled={isSubmitting || failedAttempts >= 3}
               >
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isSubmitting ? "Signing in..." : "Sign In"}
               </Button>
               
               <div className="text-center text-sm text-gray-600">

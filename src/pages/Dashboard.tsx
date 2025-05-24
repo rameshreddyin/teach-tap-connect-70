@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -67,21 +66,54 @@ const Dashboard: React.FC = () => {
       return { type: 'new-year', emoji: '🎊', message: "Happy New Year!" };
     }
     
-    // Remove weekend check - no longer showing weekend message
-    
     return null;
   };
   
   const specialDay = getSpecialDay();
-  // Only consider actual holidays now, not weekends
   const isHoliday = specialDay && (specialDay.type === 'christmas' || specialDay.type === 'new-year' || specialDay.type === 'mothers-day');
   
-  // Mock data
+  // Function to get time status for classes
+  const getTimeStatus = (timeSlot: string) => {
+    const [startTime, endTime] = timeSlot.split(' - ');
+    
+    const parseTimeString = (timeStr: string) => {
+      const [time, period] = timeStr.trim().split(' ');
+      const [hours, minutes] = time.split(':').map(Number);
+      
+      let hour24 = hours;
+      if (period === 'PM' && hours !== 12) {
+        hour24 = hours + 12;
+      } else if (period === 'AM' && hours === 12) {
+        hour24 = 0;
+      }
+      
+      const date = new Date();
+      date.setHours(hour24, minutes, 0, 0);
+      return date;
+    };
+    
+    const startDate = parseTimeString(startTime);
+    const endDate = parseTimeString(endTime);
+    const now = new Date();
+    
+    if (now < startDate) {
+      return 'upcoming';
+    } else if (now > endDate) {
+      return 'past';
+    } else {
+      return 'current';
+    }
+  };
+  
+  // Mock data with corrected time status
   const todayClasses = [
-    { time: "10:00 AM - 10:45 AM", subject: "Mathematics", class: "Class 9A", room: "Room 101", status: "completed" },
-    { time: "11:00 AM - 11:45 AM", subject: "Mathematics", class: "Class 10B", room: "Room 203", status: "current" },
-    { time: "1:30 PM - 2:15 PM", subject: "Mathematics", class: "Class 8C", room: "Room 105", status: "upcoming" },
-  ];
+    { time: "10:00 AM - 10:45 AM", subject: "Mathematics", class: "Class 9A", room: "Room 101" },
+    { time: "11:00 AM - 11:45 AM", subject: "Mathematics", class: "Class 10B", room: "Room 203" },
+    { time: "1:30 PM - 2:15 PM", subject: "Mathematics", class: "Class 8C", room: "Room 105" },
+  ].map(session => ({
+    ...session,
+    status: getTimeStatus(session.time)
+  }));
   
   const quickMenuItems = [
     { icon: ListChecks, label: "Attendance", route: "/attendance" },
