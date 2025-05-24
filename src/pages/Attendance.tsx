@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Users, CheckCircle, XCircle, Clock, Calendar, Edit } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -194,7 +193,7 @@ const Attendance: React.FC = () => {
   };
 
   return (
-    <div className="page-container pb-24 max-w-lg mx-auto animate-fade-in">
+    <div className="page-container pb-32 max-w-lg mx-auto animate-fade-in">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Users size={isMobile ? 18 : 20} className="text-gray-800" />
@@ -418,15 +417,17 @@ const Attendance: React.FC = () => {
         })}
       </div>
       
-      {/* Fixed bottom button - simplified */}
+      {/* Fixed bottom button - improved positioning and styling */}
       {dateStatus !== "future" && (
-        <div className="fixed bottom-16 left-0 right-0 p-3 bg-white border-t border-gray-100 flex justify-center shadow-md animate-fade-in z-10">
-          <Button 
-            className="w-full max-w-md bg-black hover:bg-gray-800 text-white shadow-md transition-all animate-scale-in"
-            onClick={handleSubmit}
-          >
-            {dateStatus === "past" ? "Update Attendance" : "Submit Attendance"}
-          </Button>
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-lg z-50 safe-area-inset-bottom">
+          <div className="p-4 max-w-lg mx-auto">
+            <Button 
+              className="w-full bg-black hover:bg-gray-800 text-white shadow-md transition-all animate-scale-in h-12 font-medium"
+              onClick={handleSubmit}
+            >
+              {dateStatus === "past" ? "Update Attendance" : "Submit Attendance"}
+            </Button>
+          </div>
         </div>
       )}
     </div>
