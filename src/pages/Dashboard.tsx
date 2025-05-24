@@ -74,9 +74,21 @@ const Dashboard: React.FC = () => {
 
   // Get today's classes and determine their status
   const todayClasses = React.useMemo(() => {
-    if (!schedule) return [];
+    if (!schedule || !Array.isArray(schedule)) {
+      console.log('Schedule not available or not an array:', schedule);
+      return [];
+    }
     
-    const todaySchedule = schedule.filter(item => item.day === currentDay);
+    console.log('Current day:', currentDay);
+    console.log('Full schedule:', schedule);
+    
+    const todaySchedule = schedule.filter(item => {
+      const dayMatch = item.day?.toLowerCase() === currentDay.toLowerCase();
+      console.log(`Checking ${item.day} vs ${currentDay}: ${dayMatch}`);
+      return dayMatch;
+    });
+    
+    console.log('Today\'s schedule:', todaySchedule);
     
     return todaySchedule.map(session => ({
       ...session,
@@ -86,12 +98,18 @@ const Dashboard: React.FC = () => {
 
   // Function to get time status for classes
   const getTimeStatus = (timeSlot: string) => {
+    if (!timeSlot) return 'upcoming';
+    
     try {
       const [startTime, endTime] = timeSlot.split(' - ');
+      if (!startTime || !endTime) return 'upcoming';
       
       const parseTimeString = (timeStr: string) => {
         const [time, period] = timeStr.trim().split(' ');
+        if (!time || !period) return null;
+        
         const [hours, minutes] = time.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes)) return null;
         
         let hour24 = hours;
         if (period === 'PM' && hours !== 12) {
@@ -107,6 +125,9 @@ const Dashboard: React.FC = () => {
       
       const startDate = parseTimeString(startTime);
       const endDate = parseTimeString(endTime);
+      
+      if (!startDate || !endDate) return 'upcoming';
+      
       const now = new Date();
       
       if (now < startDate) {
@@ -307,11 +328,47 @@ const Dashboard: React.FC = () => {
         ) : scheduleLoading ? (
           <LoadingCard message="Loading your schedule..." />
         ) : todayClasses.length === 0 ? (
-          <Card className="border shadow-sm bg-blue-50 border-blue-200">
-            <CardContent className="p-8 text-center">
-              <CalendarDays className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-blue-800 mb-2">No Classes Today</h3>
-              <p className="text-blue-600">Enjoy your free day!</p>
+          <Card className="border shadow-lg bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-blue-200 overflow-hidden relative">
+            <CardContent className="p-8 text-center relative z-10">
+              {/* 3D Emoji with enhanced styling */}
+              <div className="relative mb-6">
+                <div 
+                  className="text-8xl select-none transform-gpu"
+                  style={{
+                    filter: 'drop-shadow(0 10px 20px rgba(59, 130, 246, 0.3))',
+                    transform: 'perspective(1000px) rotateX(15deg) rotateY(-5deg)',
+                    animation: 'float 4s ease-in-out infinite'
+                  }}
+                >
+                  🎉
+                </div>
+                {/* Floating particles effect */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-2 left-4 text-2xl opacity-60 animate-pulse" style={{ animationDelay: '0s' }}>✨</div>
+                  <div className="absolute top-8 right-6 text-xl opacity-50 animate-pulse" style={{ animationDelay: '1s' }}>🌟</div>
+                  <div className="absolute bottom-6 left-8 text-lg opacity-40 animate-pulse" style={{ animationDelay: '2s' }}>💫</div>
+                  <div className="absolute bottom-2 right-4 text-2xl opacity-70 animate-pulse" style={{ animationDelay: '0.5s' }}>⭐</div>
+                </div>
+              </div>
+              
+              <h3 className="text-2xl font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text mb-3">
+                No Classes Today!
+              </h3>
+              <p className="text-gray-600 text-lg mb-4">Enjoy your free day and relax! 🌈</p>
+              
+              {/* Decorative elements */}
+              <div className="flex justify-center gap-3 mt-6">
+                <div className="w-3 h-3 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0s' }}></div>
+                <div className="w-3 h-3 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-3 h-3 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+              </div>
+              
+              {/* Background decoration */}
+              <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+                <div className="absolute top-4 left-4 w-16 h-16 bg-blue-400 rounded-full blur-xl"></div>
+                <div className="absolute bottom-4 right-4 w-20 h-20 bg-purple-400 rounded-full blur-xl"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-indigo-400 rounded-full blur-2xl"></div>
+              </div>
             </CardContent>
           </Card>
         ) : (
@@ -349,6 +406,17 @@ const Dashboard: React.FC = () => {
           </div>
         )}
       </section>
+      
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% {
+            transform: perspective(1000px) rotateX(15deg) rotateY(-5deg) translateY(0px);
+          }
+          50% {
+            transform: perspective(1000px) rotateX(15deg) rotateY(-5deg) translateY(-10px);
+          }
+        }
+      `}</style>
     </div>
   );
 };
