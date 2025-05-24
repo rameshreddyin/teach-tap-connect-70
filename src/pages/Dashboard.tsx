@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { 
   ListChecks, 
   Bell, 
@@ -13,7 +15,8 @@ import {
   ClipboardList,
   Heart,
   Gift,
-  Sparkles
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -23,25 +26,113 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { LoadingCard, LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ErrorState } from "@/components/ui/error-state";
 import { toast } from "sonner";
+import { teacherDataService } from '../services/teacherDataService';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [isOnline, setIsOnline] = React.useState(navigator.onLine);
+  
+  // Monitor online/offline status
+  React.useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Fetch teacher data
+  const { data: teacherProfile, isLoading: profileLoading, error: profileError } = useQuery({
+    queryKey: ['teacher-profile'],
+    queryFn: () => teacherDataService.getTeacherProfile(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Fetch today's schedule
+  const { data: schedule, isLoading: scheduleLoading, error: scheduleError, refetch: refetchSchedule } = useQuery({
+    queryKey: ['class-schedule'],
+    queryFn: () => teacherDataService.getClassSchedule(),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+
   const today = new Date();
-  const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const formattedDate = today.toLocaleDateString('en-US', options);
-  const formattedTime = today.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const currentDay = today.toLocaleDateString('en-US', { weekday: 'long' });
+  const formattedDate = today.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
+  // Get today's classes and determine their status
+  const todayClasses = React.useMemo(() => {
+    if (!schedule) return [];
+    
+    const todaySchedule = schedule.filter(item => item.day === currentDay);
+    
+    return todaySchedule.map(session => ({
+      ...session,
+      status: getTimeStatus(session.time)
+    }));
+  }, [schedule, currentDay]);
+
+  // Function to get time status for classes
+  const getTimeStatus = (timeSlot: string) => {
+    try {
+      const [startTime, endTime] = timeSlot.split(' - ');
+      
+      const parseTimeString = (timeStr: string) => {
+        const [time, period] = timeStr.trim().split(' ');
+        const [hours, minutes] = time.split(':').map(Number);
+        
+        let hour24 = hours;
+        if (period === 'PM' && hours !== 12) {
+          hour24 = hours + 12;
+        } else if (period === 'AM' && hours === 12) {
+          hour24 = 0;
+        }
+        
+        const date = new Date();
+        date.setHours(hour24, minutes, 0, 0);
+        return date;
+      };
+      
+      const startDate = parseTimeString(startTime);
+      const endDate = parseTimeString(endTime);
+      const now = new Date();
+      
+      if (now < startDate) {
+        return 'upcoming';
+      } else if (now > endDate) {
+        return 'past';
+      } else {
+        return 'current';
+      }
+    } catch (error) {
+      console.error('Error parsing time:', error);
+      return 'upcoming';
+    }
+  };
   
   const handleLogout = () => {
+    localStorage.removeItem('user_authenticated');
+    localStorage.removeItem('login_timestamp');
     toast.success("Logged out successfully");
     navigate('/');
   };
-  
+
   // Check for special days
   const getSpecialDay = () => {
     const month = today.getMonth();
     const date = today.getDate();
-    const day = today.getDay();
     
     // Mother's Day (second Sunday of May)
     if (month === 4) {
@@ -72,49 +163,6 @@ const Dashboard: React.FC = () => {
   const specialDay = getSpecialDay();
   const isHoliday = specialDay && (specialDay.type === 'christmas' || specialDay.type === 'new-year' || specialDay.type === 'mothers-day');
   
-  // Function to get time status for classes
-  const getTimeStatus = (timeSlot: string) => {
-    const [startTime, endTime] = timeSlot.split(' - ');
-    
-    const parseTimeString = (timeStr: string) => {
-      const [time, period] = timeStr.trim().split(' ');
-      const [hours, minutes] = time.split(':').map(Number);
-      
-      let hour24 = hours;
-      if (period === 'PM' && hours !== 12) {
-        hour24 = hours + 12;
-      } else if (period === 'AM' && hours === 12) {
-        hour24 = 0;
-      }
-      
-      const date = new Date();
-      date.setHours(hour24, minutes, 0, 0);
-      return date;
-    };
-    
-    const startDate = parseTimeString(startTime);
-    const endDate = parseTimeString(endTime);
-    const now = new Date();
-    
-    if (now < startDate) {
-      return 'upcoming';
-    } else if (now > endDate) {
-      return 'past';
-    } else {
-      return 'current';
-    }
-  };
-  
-  // Mock data with corrected time status
-  const todayClasses = [
-    { time: "10:00 AM - 10:45 AM", subject: "Mathematics", class: "Class 9A", room: "Room 101" },
-    { time: "11:00 AM - 11:45 AM", subject: "Mathematics", class: "Class 10B", room: "Room 203" },
-    { time: "1:30 PM - 2:15 PM", subject: "Mathematics", class: "Class 8C", room: "Room 105" },
-  ].map(session => ({
-    ...session,
-    status: getTimeStatus(session.time)
-  }));
-  
   const quickMenuItems = [
     { icon: ListChecks, label: "Attendance", route: "/attendance" },
     { icon: Bell, label: "Notices", route: "/announcements" },
@@ -125,30 +173,67 @@ const Dashboard: React.FC = () => {
     { icon: GraduationCap, label: "Grades", route: "#" },
     { icon: User, label: "Profile", route: "#" }
   ];
+
+  // Show loading state
+  if (profileLoading) {
+    return (
+      <div className="page-container bg-gray-50">
+        <LoadingCard message="Loading your dashboard..." />
+      </div>
+    );
+  }
+
+  // Show error state
+  if (profileError) {
+    return (
+      <div className="page-container bg-gray-50">
+        <ErrorState 
+          title="Failed to load dashboard"
+          message="We couldn't load your teacher profile. Please check your connection and try again."
+          onRetry={() => window.location.reload()}
+        />
+      </div>
+    );
+  }
   
   return (
     <div className="page-container bg-gray-50">
+      {/* Header with connection status */}
       <div className="flex justify-between items-center mb-8 animate-fade-in">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Welcome Back
-          </h1>
-          <p className="text-gray-600 text-sm mt-1">{formattedDate}</p>
+          <div className="flex items-center gap-2 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Welcome Back, {teacherProfile?.name}
+            </h1>
+            {isOnline ? (
+              <Wifi className="h-5 w-5 text-green-500" />
+            ) : (
+              <WifiOff className="h-5 w-5 text-red-500" />
+            )}
+          </div>
+          <p className="text-gray-600 text-sm">{formattedDate}</p>
+          {!isOnline && (
+            <p className="text-red-600 text-xs mt-1">You're offline. Some features may be limited.</p>
+          )}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar className="h-12 w-12 cursor-pointer ring-2 ring-gray-200 hover:ring-gray-300 transition-all hover:scale-105">
-              <AvatarFallback className="bg-gray-900 text-white font-semibold text-lg">MS</AvatarFallback>
+              <AvatarFallback className="bg-gray-900 text-white font-semibold text-lg">
+                {teacherProfile?.name?.split(' ').map(n => n[0]).join('') || 'T'}
+              </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg animate-scale-in">
             <div className="flex items-center gap-3 p-3 border-b border-gray-100">
               <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-gray-900 text-white">MS</AvatarFallback>
+                <AvatarFallback className="bg-gray-900 text-white">
+                  {teacherProfile?.name?.split(' ').map(n => n[0]).join('') || 'T'}
+                </AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-semibold">Ms. Smith</p>
-                <p className="text-xs text-gray-500">Mathematics Department</p>
+                <p className="text-sm font-semibold">{teacherProfile?.name}</p>
+                <p className="text-xs text-gray-500">{teacherProfile?.department} Department</p>
               </div>
             </div>
             <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
@@ -159,7 +244,7 @@ const Dashboard: React.FC = () => {
         </DropdownMenu>
       </div>
       
-      {/* Quick Menu - Enhanced Design */}
+      {/* Quick Menu */}
       <section className="mb-8 animate-fade-in" style={{ animationDelay: "100ms" }}>
         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Access</h2>
         <div className="grid grid-cols-4 gap-4">
@@ -181,15 +266,18 @@ const Dashboard: React.FC = () => {
       </section>
       
       {/* Today's Schedule or Holiday Message */}
-      <section className="animate-fade-in" style={{ animationDelay: "200ms" }}>
+      <section className="animate-fade-in pb-20" style={{ animationDelay: "200ms" }}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900">
             {isHoliday ? "Holiday Time!" : "Today's Classes"}
           </h2>
           {!isHoliday && (
-            <Link to="/timetable" className="text-sm text-gray-700 hover:text-gray-900 font-medium">
-              View All
-            </Link>
+            <div className="flex items-center gap-2">
+              {scheduleLoading && <LoadingSpinner size="sm" />}
+              <Link to="/timetable" className="text-sm text-gray-700 hover:text-gray-900 font-medium">
+                View All
+              </Link>
+            </div>
           )}
         </div>
         
@@ -210,14 +298,30 @@ const Dashboard: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        ) : scheduleError ? (
+          <ErrorState 
+            title="Failed to load schedule"
+            message="We couldn't load your class schedule. Please try again."
+            onRetry={refetchSchedule}
+          />
+        ) : scheduleLoading ? (
+          <LoadingCard message="Loading your schedule..." />
+        ) : todayClasses.length === 0 ? (
+          <Card className="border shadow-sm bg-blue-50 border-blue-200">
+            <CardContent className="p-8 text-center">
+              <CalendarDays className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-blue-800 mb-2">No Classes Today</h3>
+              <p className="text-blue-600">Enjoy your free day!</p>
+            </CardContent>
+          </Card>
         ) : (
           <div className="space-y-3">
             {todayClasses.map((session, index) => (
               <Card 
-                key={index} 
+                key={session.id} 
                 className={`border shadow-sm transition-all duration-300 hover:shadow-md animate-fade-in ${
-                  session.status === 'current' ? 'bg-gray-50 border-gray-900' : 
-                  session.status === 'completed' ? 'bg-gray-50 opacity-80' : 'bg-white hover:bg-gray-50'
+                  session.status === 'current' ? 'bg-green-50 border-green-200' : 
+                  session.status === 'past' ? 'bg-gray-50 opacity-80' : 'bg-white hover:bg-gray-50'
                 }`}
                 style={{ animationDelay: `${300 + index * 100}ms` }}
               >
@@ -235,8 +339,8 @@ const Dashboard: React.FC = () => {
                   
                   {session.status === 'current' && (
                     <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-gray-900 animate-pulse" />
-                      <span className="text-xs font-medium text-gray-900">Live</span>
+                      <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                      <span className="text-xs font-medium text-green-700">Live</span>
                     </div>
                   )}
                 </CardContent>
