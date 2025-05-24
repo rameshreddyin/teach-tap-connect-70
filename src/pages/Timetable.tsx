@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -80,26 +79,39 @@ const Timetable: React.FC = () => {
     
     const [startTime, endTime] = timeSlot.split(' - ');
     
-    const getTimeDate = (timeStr: string) => {
-      const [time, period] = timeStr.split(' ');
+    const parseTimeString = (timeStr: string) => {
+      const [time, period] = timeStr.trim().split(' ');
       const [hours, minutes] = time.split(':').map(Number);
-      const date = new Date(currentTime);
-      date.setHours(
-        period === 'PM' && hours !== 12 ? hours + 12 : (period === 'AM' && hours === 12 ? 0 : hours),
-        minutes,
-        0
-      );
+      
+      let hour24 = hours;
+      if (period === 'PM' && hours !== 12) {
+        hour24 = hours + 12;
+      } else if (period === 'AM' && hours === 12) {
+        hour24 = 0;
+      }
+      
+      const date = new Date();
+      date.setHours(hour24, minutes, 0, 0);
       return date;
     };
     
-    const startDate = getTimeDate(startTime);
-    const endDate = getTimeDate(endTime);
+    const startDate = parseTimeString(startTime);
+    const endDate = parseTimeString(endTime);
+    const now = new Date();
     
-    if (currentTime < startDate) {
+    console.log(`Checking time slot: ${timeSlot}`);
+    console.log(`Current time: ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`);
+    console.log(`Start time: ${startDate.getHours()}:${startDate.getMinutes().toString().padStart(2, '0')}`);
+    console.log(`End time: ${endDate.getHours()}:${endDate.getMinutes().toString().padStart(2, '0')}`);
+    
+    if (now < startDate) {
+      console.log('Status: upcoming');
       return 'upcoming';
-    } else if (currentTime > endDate) {
+    } else if (now > endDate) {
+      console.log('Status: past');
       return 'past';
     } else {
+      console.log('Status: current');
       return 'current';
     }
   };
