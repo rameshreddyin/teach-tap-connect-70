@@ -9,10 +9,12 @@
   "theme_color": "#1f2937",
   "orientation": "portrait",
   "categories": ["education", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
   "icons": [
     {
       "src": "favicon.ico",
-      "sizes": "16x16 32x32",
+      "sizes": "16x16 32x32 48x48",
       "type": "image/x-icon"
     },
     {
@@ -43,5 +45,8 @@
       "url": "/timetable",
       "icons": [{ "src": "favicon.ico", "sizes": "96x96" }]
     }
-  ]
+  ],
+  "prefer_related_applications": false,
+  "scope": "/",
+  "edge_side_includes": true
 }

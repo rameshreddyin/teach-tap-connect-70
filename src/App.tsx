@@ -22,18 +22,20 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes (previously cacheTime)
-      retry: (failureCount, error) => {
+      retry: (failureCount, error: any) => {
         // Don't retry on 4xx errors
-        if (error instanceof Error && error.message.includes('4')) {
+        if (error?.status >= 400 && error?.status < 500) {
           return false;
         }
         return failureCount < 2;
       },
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: process.env.NODE_ENV === 'development',
       refetchOnReconnect: true,
+      networkMode: 'offlineFirst', // Better offline support
     },
     mutations: {
       retry: 1,
+      networkMode: 'offlineFirst',
     },
   },
 });
@@ -42,9 +44,11 @@ const queryClient = new QueryClient({
 const logError = (error: Error, errorInfo: any) => {
   console.error('Application Error:', error, errorInfo);
   
-  // In production, you would send this to your error tracking service
-  // Example: Sentry, LogRocket, Bugsnag, etc.
-  // Sentry.captureException(error, { extra: errorInfo });
+  // In production, send to error tracking service
+  if (process.env.NODE_ENV === 'production') {
+    // Example: Send to external error tracking
+    // errorTracker.captureException(error, { extra: errorInfo });
+  }
 };
 
 // Service Worker registration for offline support
@@ -54,6 +58,21 @@ const registerServiceWorker = () => {
       navigator.serviceWorker.register('/sw.js')
         .then((registration) => {
           console.log('SW registered: ', registration);
+          
+          // Check for updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New content available, prompt user to refresh
+                  if (confirm('New version available! Refresh to update?')) {
+                    window.location.reload();
+                  }
+                }
+              });
+            }
+          });
         })
         .catch((registrationError) => {
           console.log('SW registration failed: ', registrationError);
@@ -62,9 +81,28 @@ const registerServiceWorker = () => {
   }
 };
 
+// Performance monitoring
+const initPerformanceMonitoring = () => {
+  if ('PerformanceObserver' in window) {
+    // Monitor largest contentful paint
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        console.log('LCP:', entry.startTime);
+      }
+    });
+    observer.observe({ entryTypes: ['largest-contentful-paint'] });
+  }
+};
+
 const App = () => {
   React.useEffect(() => {
     registerServiceWorker();
+    initPerformanceMonitoring();
+    
+    // Cleanup function
+    return () => {
+      // Cleanup any subscriptions or timers if needed
+    };
   }, []);
 
   return (
@@ -79,6 +117,13 @@ const App = () => {
                 richColors
                 closeButton
                 duration={4000}
+                toastOptions={{
+                  style: {
+                    background: 'white',
+                    color: 'black',
+                    border: '1px solid #e5e7eb',
+                  },
+                }}
               />
               <BrowserRouter>
                 <Routes>
