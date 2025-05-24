@@ -67,19 +67,17 @@ const Dashboard: React.FC = () => {
       return { type: 'new-year', emoji: '🎊', message: "Happy New Year!" };
     }
     
-    // Weekend
-    if (day === 0 || day === 6) {
-      return { type: 'weekend', emoji: '🌞', message: "Enjoy your weekend!" };
-    }
+    // Remove weekend check - no longer showing weekend message
     
     return null;
   };
   
   const specialDay = getSpecialDay();
-  const isHoliday = specialDay && (specialDay.type === 'christmas' || specialDay.type === 'new-year' || specialDay.type === 'weekend');
+  // Only consider actual holidays now, not weekends
+  const isHoliday = specialDay && (specialDay.type === 'christmas' || specialDay.type === 'new-year' || specialDay.type === 'mothers-day');
   
-  // Mock data - adjusted for holidays
-  const todayClasses = isHoliday ? [] : [
+  // Mock data
+  const todayClasses = [
     { time: "10:00 AM - 10:45 AM", subject: "Mathematics", class: "Class 9A", room: "Room 101", status: "completed" },
     { time: "11:00 AM - 11:45 AM", subject: "Mathematics", class: "Class 10B", room: "Room 203", status: "current" },
     { time: "1:30 PM - 2:15 PM", subject: "Mathematics", class: "Class 8C", room: "Room 105", status: "upcoming" },
@@ -129,28 +127,6 @@ const Dashboard: React.FC = () => {
         </DropdownMenu>
       </div>
       
-      {/* Special Day Animation */}
-      {specialDay && (
-        <section className="mb-8">
-          <Card className={`border shadow-sm ${
-            specialDay.type === 'mothers-day' ? 'bg-gradient-to-r from-pink-50 to-rose-50 border-pink-200' :
-            specialDay.type === 'christmas' ? 'bg-gradient-to-r from-red-50 to-green-50 border-red-200' :
-            specialDay.type === 'new-year' ? 'bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200' :
-            'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200'
-          }`}>
-            <CardContent className="p-6 text-center">
-              <div className="text-6xl mb-4 animate-bounce">{specialDay.emoji}</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{specialDay.message}</h2>
-              <div className="flex justify-center gap-2">
-                <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
-                <Heart className="h-5 w-5 text-red-500 animate-pulse" />
-                <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      )}
-      
       {/* Quick Menu - Compact Design */}
       <section className="mb-8">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Access</h2>
@@ -186,11 +162,15 @@ const Dashboard: React.FC = () => {
         </div>
         
         {isHoliday ? (
-          <Card className="border border-gray-200 shadow-sm bg-gradient-to-r from-blue-50 to-purple-50">
+          <Card className={`border shadow-sm ${
+            specialDay.type === 'mothers-day' ? 'bg-gradient-to-r from-pink-50 to-rose-50 border-pink-200' :
+            specialDay.type === 'christmas' ? 'bg-gradient-to-r from-red-50 to-green-50 border-red-200' : 
+            'bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200'
+          }`}>
             <CardContent className="p-8 text-center">
-              <div className="text-5xl mb-4 animate-bounce">🏖️</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">No Classes Today!</h3>
-              <p className="text-gray-600 mb-4">Enjoy your time off and relax!</p>
+              <div className="text-6xl mb-4 animate-bounce">{specialDay.emoji}</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">{specialDay.message}</h3>
+              <p className="text-gray-600 mb-4">No Classes Today!</p>
               <div className="flex justify-center gap-2">
                 <Gift className="h-5 w-5 text-purple-500 animate-pulse" />
                 <Heart className="h-5 w-5 text-red-500 animate-pulse" />
