@@ -96,7 +96,7 @@ const Dashboard: React.FC = () => {
   
   return (
     <div className="page-container bg-gray-50">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-8 animate-fade-in">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
             Welcome Back
@@ -105,11 +105,11 @@ const Dashboard: React.FC = () => {
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Avatar className="h-12 w-12 cursor-pointer ring-2 ring-gray-200 hover:ring-gray-300 transition-all">
+            <Avatar className="h-12 w-12 cursor-pointer ring-2 ring-gray-200 hover:ring-gray-300 transition-all hover:scale-105">
               <AvatarFallback className="bg-gray-900 text-white font-semibold text-lg">MS</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg">
+          <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg animate-scale-in">
             <div className="flex items-center gap-3 p-3 border-b border-gray-100">
               <Avatar className="h-10 w-10">
                 <AvatarFallback className="bg-gray-900 text-white">MS</AvatarFallback>
@@ -127,19 +127,19 @@ const Dashboard: React.FC = () => {
         </DropdownMenu>
       </div>
       
-      {/* Quick Menu - Compact Design */}
-      <section className="mb-8">
+      {/* Quick Menu - Enhanced Design */}
+      <section className="mb-8 animate-fade-in" style={{ animationDelay: "100ms" }}>
         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Access</h2>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-4">
           {quickMenuItems.map((item, index) => (
             <Link to={item.route} key={index} className="block">
-              <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 aspect-square">
+              <Card className="border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden hover:-translate-y-1 group">
                 <CardContent className="p-0 h-full">
-                  <div className="h-full flex flex-col items-center justify-center bg-white hover:bg-gray-50 transition-colors rounded-lg">
-                    <div className="p-3 rounded-full bg-gray-100 mb-2">
-                      <item.icon size={20} className="text-gray-900" />
+                  <div className="h-full flex flex-col items-center justify-center bg-white rounded-lg p-3">
+                    <div className="p-3 rounded-full bg-gray-50 group-hover:bg-gray-100 mb-3 transition-all duration-300 group-hover:scale-110">
+                      <item.icon size={20} className="text-gray-900 group-hover:text-gray-800" />
                     </div>
-                    <p className="text-xs font-medium text-center text-gray-900 px-1">{item.label}</p>
+                    <p className="text-sm font-medium text-center text-gray-800 group-hover:text-black transition-colors">{item.label}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -149,7 +149,7 @@ const Dashboard: React.FC = () => {
       </section>
       
       {/* Today's Schedule or Holiday Message */}
-      <section>
+      <section className="animate-fade-in" style={{ animationDelay: "200ms" }}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900">
             {isHoliday ? "Holiday Time!" : "Today's Classes"}
@@ -166,7 +166,7 @@ const Dashboard: React.FC = () => {
             specialDay.type === 'mothers-day' ? 'bg-gradient-to-r from-pink-50 to-rose-50 border-pink-200' :
             specialDay.type === 'christmas' ? 'bg-gradient-to-r from-red-50 to-green-50 border-red-200' : 
             'bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200'
-          }`}>
+          } animate-scale-in transition-all hover:shadow-md`}>
             <CardContent className="p-8 text-center">
               <div className="text-6xl mb-4 animate-bounce">{specialDay.emoji}</div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">{specialDay.message}</h3>
@@ -181,10 +181,14 @@ const Dashboard: React.FC = () => {
         ) : (
           <div className="space-y-3">
             {todayClasses.map((session, index) => (
-              <Card key={index} className={`border shadow-sm ${
-                session.status === 'current' ? 'bg-gray-50 border-gray-900' : 
-                session.status === 'completed' ? 'bg-gray-50 opacity-80' : 'bg-white hover:bg-gray-50'
-              }`}>
+              <Card 
+                key={index} 
+                className={`border shadow-sm transition-all duration-300 hover:shadow-md animate-fade-in ${
+                  session.status === 'current' ? 'bg-gray-50 border-gray-900' : 
+                  session.status === 'completed' ? 'bg-gray-50 opacity-80' : 'bg-white hover:bg-gray-50'
+                }`}
+                style={{ animationDelay: `${300 + index * 100}ms` }}
+              >
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-900">{session.subject}</div>
@@ -199,7 +203,7 @@ const Dashboard: React.FC = () => {
                   
                   {session.status === 'current' && (
                     <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-gray-900" />
+                      <div className="h-2 w-2 rounded-full bg-gray-900 animate-pulse" />
                       <span className="text-xs font-medium text-gray-900">Live</span>
                     </div>
                   )}

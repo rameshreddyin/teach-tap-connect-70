@@ -187,41 +187,41 @@ const Attendance: React.FC = () => {
 
   return (
     <div className="page-container">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6 animate-fade-in">
         <div className="flex items-center gap-2">
-          <Users size={20} />
-          <h1 className="font-bold">Attendance</h1>
+          <Users size={20} className="text-gray-800" />
+          <h1 className="font-bold text-gray-900">Attendance</h1>
         </div>
         
         {dateStatus !== "future" && (
           isSelectMode ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 animate-scale-in">
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm" 
                 onClick={handleSelectAll}
-                className="text-xs"
+                className="text-xs transition-all hover:bg-gray-100"
               >
                 {selectedStudents.length === sortedStudents.length ? "Deselect All" : "Select All"}
               </Button>
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm"
                 onClick={() => {
                   setIsSelectMode(false);
                   setSelectedStudents([]);
                 }}
-                className="text-xs"
+                className="text-xs transition-all hover:bg-gray-100"
               >
                 Cancel
               </Button>
             </div>
           ) : (
             <Button 
-              variant="ghost" 
+              variant="outline" 
               size="sm"
               onClick={() => setIsSelectMode(true)}
-              className="text-xs"
+              className="text-xs transition-all hover:bg-gray-100 animate-fade-in"
             >
               Select Multiple
             </Button>
@@ -229,34 +229,40 @@ const Attendance: React.FC = () => {
         )}
       </div>
       
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handlePreviousDay}
-          >
-            <ChevronLeft size={20} />
-          </Button>
-          <span className="font-medium">{formattedDate}</span>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={handleNextDay}
-          >
-            <ChevronRight size={20} />
-          </Button>
-        </div>
+      <div className="mb-6 animate-fade-in" style={{ animationDelay: "100ms" }}>
+        <Card className="shadow-sm border border-gray-100 mb-4">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-center">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handlePreviousDay}
+                className="transition-all hover:bg-gray-100 hover:scale-105"
+              >
+                <ChevronLeft size={20} />
+              </Button>
+              <span className="font-medium text-lg text-gray-900">{formattedDate}</span>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={handleNextDay}
+                className="transition-all hover:bg-gray-100 hover:scale-105"
+              >
+                <ChevronRight size={20} />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
         
         <div className="flex justify-between items-center mb-4">
           <Select
             value={selectedClass}
             onValueChange={setSelectedClass}
           >
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-32 bg-white border-gray-200 shadow-sm transition-all hover:border-gray-300">
               <SelectValue placeholder="Select Class" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="animate-scale-in">
               <SelectItem value="9A">Class 9A</SelectItem>
               <SelectItem value="9B">Class 9B</SelectItem>
               <SelectItem value="10A">Class 10A</SelectItem>
@@ -264,22 +270,22 @@ const Attendance: React.FC = () => {
             </SelectContent>
           </Select>
           
-          <div className="text-sm text-teacherApp-textLight">
+          <div className="text-sm text-teacherApp-textLight rounded-full px-3 py-1 bg-white shadow-sm border border-gray-100">
             <span className="font-medium text-green-600">{statusCounts.present}</span> / {sortedStudents.length} present
           </div>
         </div>
         
         {/* Status based UI - different for today/past/future */}
         {dateStatus === "future" ? (
-          <div className="bg-gray-50 p-4 rounded-lg text-center my-8">
-            <Calendar size={40} className="mx-auto mb-2 text-gray-400" />
-            <p className="text-gray-500 font-medium">Cannot take attendance for future dates</p>
+          <div className="bg-gray-50 p-6 rounded-lg text-center my-8 shadow-sm border border-gray-100 animate-scale-in">
+            <Calendar size={40} className="mx-auto mb-3 text-gray-400" />
+            <p className="text-gray-600 font-medium">Cannot take attendance for future dates</p>
             <p className="text-sm text-gray-400 mt-1">Please select today or a past date</p>
           </div>
         ) : (
           <>
             {/* Quick Actions Bar */}
-            <div className="flex justify-between items-center mb-4 bg-gray-50 p-3 rounded-lg">
+            <div className="flex justify-between items-center mb-5 bg-white p-3 rounded-lg shadow-sm border border-gray-100 animate-fade-in" style={{ animationDelay: "200ms" }}>
               <div className="flex gap-2">
                 {dateStatus === "today" ? (
                   <AlertDialog>
@@ -287,13 +293,13 @@ const Attendance: React.FC = () => {
                       <Button 
                         variant="outline"
                         size="sm"
-                        className="bg-green-50 border-green-200 hover:bg-green-100 text-green-700"
+                        className="bg-green-50 border-green-200 hover:bg-green-100 text-green-700 transition-all hover:scale-105"
                       >
-                        <CheckCircle size={16} />
+                        <CheckCircle size={16} className="mr-1" />
                         All Present
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="animate-scale-in">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Mark all students present?</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -310,7 +316,7 @@ const Attendance: React.FC = () => {
                   <Button 
                     variant="outline"
                     size="sm"
-                    className="bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-700"
+                    className="bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-700 transition-all hover:scale-105"
                     onClick={handleEditAttendance}
                   >
                     <Edit size={16} className="mr-1" />
@@ -320,13 +326,13 @@ const Attendance: React.FC = () => {
               </div>
               
               {isSelectMode && selectedStudents.length > 0 && dateStatus === "today" && (
-                <div className="flex gap-1">
+                <div className="flex gap-1 animate-fade-in">
                   {attendanceOptions.map(option => (
                     <Button
                       key={option.value}
                       size="sm"
                       variant="ghost"
-                      className={`p-1.5 ${option.color} text-white rounded-md`}
+                      className={`p-1.5 ${option.color} text-white rounded-md transition-all hover:opacity-90 hover:scale-105`}
                       onClick={() => handleBulkStatusChange(option.value)}
                     >
                       <option.icon size={14} />
@@ -337,12 +343,14 @@ const Attendance: React.FC = () => {
             </div>
             
             {/* Status Summary */}
-            <div className="flex justify-between gap-2 mb-4">
-              {attendanceOptions.map(option => (
-                <div key={option.value} className="text-xs flex flex-col items-center">
-                  <span className={`${option.color} w-3 h-3 rounded-full mb-1`}></span>
-                  <span>{statusCounts[option.value] || 0}</span>
-                  <span>{option.label}</span>
+            <div className="flex justify-between gap-2 mb-5 p-3 bg-white rounded-lg shadow-sm border border-gray-100 animate-fade-in" style={{ animationDelay: "300ms" }}>
+              {attendanceOptions.map((option, index) => (
+                <div key={option.value} className="text-xs flex flex-col items-center transition-all hover:scale-110" style={{ animationDelay: `${400 + index * 50}ms` }}>
+                  <div className={`${option.color} w-4 h-4 rounded-full mb-1 flex items-center justify-center`}>
+                    <option.icon size={10} className="text-white" />
+                  </div>
+                  <span className="font-medium">{statusCounts[option.value] || 0}</span>
+                  <span className="text-gray-500">{option.label}</span>
                 </div>
               ))}
             </div>
@@ -351,19 +359,28 @@ const Attendance: React.FC = () => {
       </div>
       
       <div className="space-y-3 mb-8">
-        {sortedStudents.map((student) => (
-          <Card key={student.id} className={`border-none bg-teacherApp-card ${isSelectMode && selectedStudents.includes(student.id) ? 'ring-2 ring-blue-400' : ''}`}>
-            <CardContent className="p-3">
+        {sortedStudents.map((student, index) => (
+          <Card 
+            key={student.id} 
+            className={`border-none shadow-sm transition-all duration-300 hover:shadow-md animate-fade-in
+              ${isSelectMode && selectedStudents.includes(student.id) ? 'ring-2 ring-blue-400' : ''}
+              ${student.status === 'present' ? 'bg-green-50' : 
+                student.status === 'absent' ? 'bg-red-50' : 
+                student.status === 'late' ? 'bg-amber-50' : 
+                student.status === 'permitted' ? 'bg-blue-50' : 'bg-white'}`}
+            style={{ animationDelay: `${400 + index * 50}ms` }}  
+          >
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center flex-1" onClick={() => dateStatus !== "future" && isSelectMode && handleToggleSelect(student.id)}>
-                  <Avatar className="h-9 w-9 mr-3">
-                    <AvatarFallback className={`text-xs bg-gray-200 ${student.gender === 'female' ? 'text-pink-500' : 'text-blue-500'}`}>
+                  <Avatar className={`h-10 w-10 mr-3 ${isSelectMode && selectedStudents.includes(student.id) ? 'ring-2 ring-blue-400' : ''} transition-all`}>
+                    <AvatarFallback className={`text-xs ${student.gender === 'female' ? 'bg-pink-100 text-pink-600' : 'bg-blue-100 text-blue-600'}`}>
                       {student.initials}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{student.name}</span>
+                      <span className="font-medium text-gray-900">{student.name}</span>
                       {getStatusBadge(student.status)}
                     </div>
                     <div className="text-xs text-gray-500">{student.rollNumber}</div>
@@ -371,7 +388,10 @@ const Attendance: React.FC = () => {
                 </div>
                 
                 {dateStatus !== "future" && (isSelectMode ? (
-                  <div className="w-5 h-5 rounded border flex items-center justify-center" onClick={() => handleToggleSelect(student.id)}>
+                  <div 
+                    className="w-5 h-5 rounded border flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-all" 
+                    onClick={() => handleToggleSelect(student.id)}
+                  >
                     {selectedStudents.includes(student.id) && <CheckCircle className="w-4 h-4 text-blue-500" />}
                   </div>
                 ) : (
@@ -382,7 +402,7 @@ const Attendance: React.FC = () => {
                           key={option.value}
                           className={`p-1.5 rounded-md ${student.status === option.value ? option.color : 'bg-gray-100'} 
                                     ${student.status === option.value ? 'text-white' : 'text-gray-500'}
-                                    transition-colors hover:opacity-90`}
+                                    transition-all hover:scale-110`}
                           onClick={() => handleAttendanceChange(student.id, option.value)}
                         >
                           <option.icon size={14} />
@@ -392,7 +412,7 @@ const Attendance: React.FC = () => {
                       <Button 
                         size="sm"
                         variant="ghost"
-                        className="p-1 text-blue-500 hover:text-blue-700"
+                        className="p-1 text-blue-500 hover:text-blue-700 transition-all hover:scale-110"
                         onClick={handleEditAttendance}
                       >
                         <Edit size={14} />
@@ -408,8 +428,9 @@ const Attendance: React.FC = () => {
       
       {dateStatus === "today" && (
         <Button 
-          className="w-full bg-teacherApp-accent hover:bg-black text-white"
+          className="w-full bg-teacherApp-accent hover:bg-black text-white shadow-md hover:shadow-lg transition-all animate-fade-in hover:scale-105"
           onClick={handleSubmit}
+          style={{ animationDelay: "700ms" }}
         >
           Submit Attendance
         </Button>
@@ -417,8 +438,9 @@ const Attendance: React.FC = () => {
       
       {dateStatus === "past" && (
         <Button 
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg transition-all animate-fade-in hover:scale-105"
           onClick={handleSubmit}
+          style={{ animationDelay: "700ms" }}
         >
           Update Attendance
         </Button>
