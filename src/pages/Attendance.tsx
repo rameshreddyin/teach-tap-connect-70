@@ -25,6 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Toggle } from "@/components/ui/toggle";
 
 // Enhanced mock data for students with roll numbers and gender
 const students = [
@@ -42,12 +43,12 @@ const students = [
   { id: 12, name: "Layla Williams", rollNumber: "G106", gender: "female", status: "permitted", initials: "LW" },
 ];
 
-// Attendance status options with color coding
+// Simplified attendance status options with subtle colors
 const attendanceOptions = [
-  { value: "present", label: "Present", color: "bg-green-500", icon: CheckCircle },
-  { value: "late", label: "Late", color: "bg-amber-500", icon: Clock },
-  { value: "absent", label: "Absent", color: "bg-red-500", icon: XCircle },
-  { value: "permitted", label: "Permitted", color: "bg-blue-500", icon: Calendar }
+  { value: "present", label: "Present", color: "bg-emerald-100 text-emerald-700 border-emerald-200", icon: CheckCircle },
+  { value: "late", label: "Late", color: "bg-amber-100 text-amber-700 border-amber-200", icon: Clock },
+  { value: "absent", label: "Absent", color: "bg-rose-100 text-rose-700 border-rose-200", icon: XCircle },
+  { value: "permitted", label: "Permitted", color: "bg-blue-100 text-blue-700 border-blue-200", icon: Calendar }
 ];
 
 const Attendance: React.FC = () => {
@@ -57,12 +58,12 @@ const Attendance: React.FC = () => {
   const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const isMobile = useIsMobile();
+  const [activeStatus, setActiveStatus] = useState<string | null>(null);
   
   const formattedDate = date.toLocaleDateString('en-US', { 
     weekday: 'short',
     day: 'numeric', 
-    month: 'short', 
-    year: 'numeric' 
+    month: 'short'
   });
   
   // Determine if the selected date is today, in the past, or in the future
@@ -94,12 +95,14 @@ const Attendance: React.FC = () => {
     const prevDay = new Date(date);
     prevDay.setDate(date.getDate() - 1);
     setDate(prevDay);
+    setActiveStatus(null);
   };
   
   const handleNextDay = () => {
     const nextDay = new Date(date);
     nextDay.setDate(date.getDate() + 1);
     setDate(nextDay);
+    setActiveStatus(null);
   };
   
   // Get the count of students by status
@@ -120,7 +123,9 @@ const Attendance: React.FC = () => {
     
     const option = attendanceOptions.find(opt => opt.value === status);
     if (option) {
-      toast.success(`Marked ${option.label}`);
+      toast.success(`Marked ${option.label}`, {
+        duration: 1500
+      });
     }
   };
   
@@ -135,7 +140,9 @@ const Attendance: React.FC = () => {
     
     const option = attendanceOptions.find(opt => opt.value === status);
     if (option) {
-      toast.success(`Marked ${selectedStudents.length} students as ${option.label}`);
+      toast.success(`Marked ${selectedStudents.length} students as ${option.label}`, {
+        duration: 1500
+      });
       setSelectedStudents([]);
       setIsSelectMode(false);
     }
@@ -158,7 +165,9 @@ const Attendance: React.FC = () => {
   };
   
   const handleSubmit = () => {
-    toast.success("Attendance submitted successfully");
+    toast.success("Attendance submitted successfully", {
+      duration: 2000
+    });
     // In a real app, this would send data to a server
   };
   
@@ -168,7 +177,8 @@ const Attendance: React.FC = () => {
     if (!option) return null;
     
     return (
-      <Badge className={`${option.color} text-white`}>
+      <Badge className={`${option.color} animate-fade-in border`}>
+        <option.icon className="mr-1 h-3 w-3" />
         {option.label}
       </Badge>
     );
@@ -205,83 +215,62 @@ const Attendance: React.FC = () => {
     
     handleAttendanceChange(studentId, newStatus);
   };
+  
+  // Bulk marking with active status
+  const setStatusForSelected = (status: string) => {
+    if (activeStatus === status) {
+      setActiveStatus(null);
+    } else {
+      setActiveStatus(status);
+    }
+  };
+
+  // Apply the active status to a student when clicked
+  const handleStudentClick = (studentId: number) => {
+    if (!activeStatus) return;
+    
+    handleAttendanceChange(studentId, activeStatus);
+  };
 
   return (
     <div className="page-container pb-24 max-w-lg mx-auto animate-fade-in">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Users size={isMobile ? 18 : 20} className="text-gray-800" />
-          <h1 className="font-bold text-gray-900 text-xl md:text-2xl">Attendance</h1>
+          <h1 className="font-bold text-gray-800 text-xl md:text-2xl">Attendance</h1>
         </div>
-        
-        {dateStatus !== "future" && !isMobile && (
-          isSelectMode ? (
-            <div className="flex items-center gap-2 animate-scale-in">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleSelectAll}
-                className="text-xs transition-all hover:bg-gray-100"
-              >
-                {selectedStudents.length === sortedStudents.length ? "Deselect All" : "Select All"}
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  setIsSelectMode(false);
-                  setSelectedStudents([]);
-                }}
-                className="text-xs transition-all hover:bg-gray-100"
-              >
-                Cancel
-              </Button>
-            </div>
-          ) : (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setIsSelectMode(true)}
-              className="text-xs transition-all hover:bg-gray-100 animate-fade-in"
-            >
-              Select Multiple
-            </Button>
-          )
-        )}
       </div>
       
-      {/* Date Selection and Class Selection - More compact for mobile */}
-      <div className="mb-4 animate-fade-in" style={{ animationDelay: "100ms" }}>
-        <Card className="shadow-sm border border-gray-100 mb-3">
-          <CardContent className={`p-3 ${isMobile ? 'py-2' : 'p-4'}`}>
-            <div className="flex justify-between items-center">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handlePreviousDay}
-                className="transition-all hover:bg-gray-100 hover:scale-105"
-              >
-                <ChevronLeft size={isMobile ? 16 : 20} />
-              </Button>
-              <span className={`font-medium ${isMobile ? 'text-base' : 'text-lg'} text-gray-900`}>{formattedDate}</span>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={handleNextDay}
-                className="transition-all hover:bg-gray-100 hover:scale-105"
-              >
-                <ChevronRight size={isMobile ? 16 : 20} />
-              </Button>
-            </div>
+      {/* Date Selection and Class Selection */}
+      <div className="mb-4 animate-fade-in" style={{ animationDelay: "50ms" }}>
+        <Card className="shadow-sm border-gray-100 mb-3">
+          <CardContent className="p-3 flex items-center justify-between">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handlePreviousDay}
+              className="transition-all hover:bg-gray-100"
+            >
+              <ChevronLeft size={isMobile ? 16 : 18} />
+            </Button>
+            <span className="font-medium text-gray-800 text-lg">{formattedDate}</span>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={handleNextDay}
+              className="transition-all hover:bg-gray-100"
+            >
+              <ChevronRight size={isMobile ? 16 : 18} />
+            </Button>
           </CardContent>
         </Card>
         
-        <div className="flex flex-wrap gap-2 justify-between items-center mb-3">
+        <div className="flex items-center justify-between mb-4 gap-2">
           <Select
             value={selectedClass}
             onValueChange={setSelectedClass}
           >
-            <SelectTrigger className={`${isMobile ? 'w-28 h-9 text-sm' : 'w-32'} bg-white border-gray-200 shadow-sm transition-all hover:border-gray-300`}>
+            <SelectTrigger className="w-32 bg-white border-gray-200 shadow-sm transition-all hover:border-gray-300">
               <SelectValue placeholder="Select Class" />
             </SelectTrigger>
             <SelectContent className="animate-scale-in">
@@ -292,35 +281,9 @@ const Attendance: React.FC = () => {
             </SelectContent>
           </Select>
           
-          <div className="text-sm text-teacherApp-textLight rounded-full px-3 py-1 bg-white shadow-sm border border-gray-100">
-            <span className="font-medium text-green-600">{statusCounts.present}</span> / {sortedStudents.length} present
+          <div className="text-sm text-gray-600 rounded-full px-3 py-1 bg-white shadow-sm border border-gray-100">
+            <span className="font-medium text-emerald-600">{statusCounts.present}</span> / {sortedStudents.length} present
           </div>
-          
-          {/* Mobile select mode toggle */}
-          {dateStatus !== "future" && isMobile && (
-            isSelectMode ? (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  setIsSelectMode(false);
-                  setSelectedStudents([]);
-                }}
-                className="text-xs h-9 transition-all hover:bg-gray-100 ml-auto"
-              >
-                Cancel Selection
-              </Button>
-            ) : (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setIsSelectMode(true)}
-                className="text-xs h-9 transition-all hover:bg-gray-100 ml-auto animate-fade-in"
-              >
-                Select
-              </Button>
-            )
-          )}
         </div>
         
         {/* Status based UI - different for today/past/future */}
@@ -332,26 +295,54 @@ const Attendance: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Quick Actions Bar */}
-            <div className="flex justify-between items-center mb-4 bg-white p-3 rounded-lg shadow-sm border border-gray-100 animate-fade-in" style={{ animationDelay: "200ms" }}>
-              <div className="flex gap-2">
-                {dateStatus === "today" ? (
+            {/* New UI: Direct attendance marking buttons */}
+            {dateStatus === "today" && (
+              <div className="mb-4 animate-fade-in" style={{ animationDelay: "100ms" }}>
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm text-gray-600 mb-1">Quick Mark Mode:</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {attendanceOptions.map(option => (
+                      <Toggle
+                        key={option.value}
+                        pressed={activeStatus === option.value}
+                        onPressedChange={() => setStatusForSelected(option.value)}
+                        className={`flex-1 gap-1 border ${
+                          activeStatus === option.value 
+                            ? option.color
+                            : 'bg-white border-gray-200'
+                        } transition-all`}
+                      >
+                        <option.icon className="h-4 w-4" />
+                        <span className={`${isMobile ? 'text-xs' : 'text-sm'}`}>{option.label}</span>
+                      </Toggle>
+                    ))}
+                  </div>
+                  {activeStatus && (
+                    <p className="text-xs text-gray-500 mt-1 animate-fade-in">
+                      Click on a student to mark them as <span className="font-medium">{
+                        attendanceOptions.find(opt => opt.value === activeStatus)?.label
+                      }</span>
+                    </p>
+                  )}
+                </div>
+                
+                <div className="flex justify-between my-3">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button 
                         variant="outline"
-                        size={isMobile ? "sm" : "default"}
-                        className="bg-green-50 border-green-200 hover:bg-green-100 text-green-700 transition-all hover:scale-105"
+                        size="sm"
+                        className="bg-emerald-50 border-emerald-200 hover:bg-emerald-100 text-emerald-700 transition-all"
                       >
-                        <CheckCircle size={isMobile ? 14 : 16} className={isMobile ? "mr-1" : "mr-2"} />
-                        {isMobile ? "All" : "All Present"}
+                        <CheckCircle size={14} className="mr-2" />
+                        All Present
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent className="animate-scale-in max-w-xs mx-auto">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Mark all students present?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This will mark all students as present for today. Any existing attendance records will be overwritten.
+                          This will mark all students as present for today.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -360,178 +351,158 @@ const Attendance: React.FC = () => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                ) : (
+                  
                   <Button 
-                    variant="outline"
-                    size={isMobile ? "sm" : "default"}
-                    className="bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-700 transition-all hover:scale-105"
-                    onClick={handleEditAttendance}
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setIsSelectMode(!isSelectMode)}
+                    className="text-xs transition-all hover:bg-gray-100 animate-fade-in"
                   >
-                    <Edit size={isMobile ? 14 : 16} className={isMobile ? "mr-1" : "mr-2"} />
-                    {isMobile ? "Edit" : "Edit Record"}
+                    {isSelectMode ? "Cancel Selection" : "Select Multiple"}
                   </Button>
+                </div>
+                
+                {isSelectMode && selectedStudents.length > 0 && (
+                  <div className="flex gap-2 items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-gray-100 mb-3 animate-fade-in">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleSelectAll}
+                      className="text-xs transition-all hover:bg-gray-100"
+                    >
+                      {selectedStudents.length === sortedStudents.length ? "Deselect All" : "Select All"}
+                    </Button>
+                    
+                    <div className="flex gap-1 animate-fade-in">
+                      {attendanceOptions.map(option => (
+                        <Button
+                          key={option.value}
+                          size="sm"
+                          className={`${option.color} rounded-md transition-all`}
+                          onClick={() => handleBulkStatusChange(option.value)}
+                        >
+                          <option.icon size={14} />
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
-              
-              {isSelectMode && selectedStudents.length > 0 && dateStatus === "today" && (
-                <div className="flex gap-1 animate-fade-in">
-                  {attendanceOptions.map(option => (
-                    <Button
-                      key={option.value}
-                      size="sm"
-                      variant="ghost"
-                      className={`p-1.5 ${option.color} text-white rounded-md transition-all hover:opacity-90 hover:scale-105`}
-                      onClick={() => handleBulkStatusChange(option.value)}
-                    >
-                      <option.icon size={isMobile ? 12 : 14} />
-                    </Button>
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
             
-            {/* Status Summary Cards - More compact for mobile */}
-            <div className={`grid grid-cols-4 gap-1 mb-4 animate-fade-in`} style={{ animationDelay: "300ms" }}>
-              {attendanceOptions.map((option, index) => (
-                <Card 
-                  key={option.value} 
-                  className={`${option.color} bg-opacity-10 border-none shadow-sm transition-all duration-200 hover:scale-105`}
-                  style={{ animationDelay: `${400 + index * 50}ms` }}
-                >
-                  <CardContent className={`flex items-center justify-between p-3 ${isMobile ? 'py-2' : ''}`}>
-                    <div className="flex items-center">
-                      <div className={`${option.color} rounded-full p-1 flex items-center justify-center mr-2`}>
-                        <option.icon size={isMobile ? 12 : 16} className="text-white" />
+            {/* Status count pills - more subtle design */}
+            <div className="grid grid-cols-4 gap-1 mb-4 animate-fade-in" style={{ animationDelay: "150ms" }}>
+              {attendanceOptions.map((option, index) => {
+                const count = statusCounts[option.value] || 0;
+                return (
+                  <Card 
+                    key={option.value} 
+                    className={`border-none shadow-sm transition-all ${option.color.split(' ')[0]} bg-opacity-20`}
+                    style={{ animationDelay: `${200 + index * 50}ms` }}
+                  >
+                    <CardContent className="p-3 flex items-center justify-between">
+                      <div className="flex items-center">
+                        <option.icon size={isMobile ? 14 : 16} className={option.color.split(' ')[1]} />
+                        <span className="font-medium text-sm ml-2">{count}</span>
                       </div>
-                      <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                        {statusCounts[option.value] || 0}
+                      <span className="text-xs text-gray-600">
+                        {option.label}
                       </span>
-                    </div>
-                    <span className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                      {isMobile ? option.label.substring(0, 4) : option.label}
-                    </span>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </>
         )}
       </div>
       
-      {/* Select All button for mobile */}
-      {isSelectMode && isMobile && (
-        <div className="mb-3 animate-fade-in">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleSelectAll}
-            className="w-full text-xs border border-gray-200 shadow-sm"
-          >
-            {selectedStudents.length === sortedStudents.length ? "Deselect All Students" : "Select All Students"}
-          </Button>
-        </div>
-      )}
-      
-      {/* Student List - Optimized for mobile */}
-      <div className="space-y-2 mb-6">
-        {sortedStudents.map((student, index) => (
-          <Card 
-            key={student.id} 
-            className={`border-none shadow-sm transition-all duration-200 ${isSelectMode && selectedStudents.includes(student.id) ? 'ring-2 ring-blue-400' : ''}
-              ${student.status === 'present' ? 'bg-green-50' : 
-                student.status === 'absent' ? 'bg-red-50' : 
-                student.status === 'late' ? 'bg-amber-50' : 
-                student.status === 'permitted' ? 'bg-blue-50' : 'bg-white'}`}
-            style={{ animationDelay: `${400 + index * 30}ms` }}  
-          >
-            <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
-              <div className="flex items-center justify-between">
+      {/* Student List - Optimized and more modern */}
+      <div className="space-y-1.5 mb-6">
+        {sortedStudents.map((student, index) => {
+          const statusOption = attendanceOptions.find(opt => opt.value === student.status);
+          const statusColorClass = statusOption ? statusOption.color.split(' ')[0] : 'bg-white';
+          
+          return (
+            <Card 
+              key={student.id} 
+              onClick={() => dateStatus === "today" && !isSelectMode ? handleStudentClick(student.id) : undefined}
+              className={`border border-gray-100 shadow-sm transition-all duration-200 
+                cursor-pointer hover:shadow ${isSelectMode && selectedStudents.includes(student.id) ? 'ring-1 ring-blue-400' : ''}
+                ${dateStatus === "today" && !isSelectMode && activeStatus ? 'hover:border-blue-300' : ''}
+                ${statusColorClass} bg-opacity-10`}
+              style={{ animationDelay: `${300 + index * 20}ms` }}  
+            >
+              <CardContent className="p-3 flex items-center justify-between">
                 <div 
                   className={`flex items-center flex-1 ${dateStatus !== "future" && isSelectMode ? 'cursor-pointer' : ''}`} 
-                  onClick={() => dateStatus !== "future" && isSelectMode && handleToggleSelect(student.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (dateStatus !== "future" && isSelectMode) {
+                      handleToggleSelect(student.id);
+                    }
+                  }}
                 >
-                  <Avatar className={`${isMobile ? 'h-8 w-8' : 'h-10 w-10'} mr-3 ${isSelectMode && selectedStudents.includes(student.id) ? 'ring-2 ring-blue-400' : ''} transition-all`}>
+                  <Avatar className={`h-9 w-9 mr-3 ${isSelectMode && selectedStudents.includes(student.id) ? 'ring-2 ring-blue-400' : ''} transition-all`}>
                     <AvatarFallback className={`text-xs ${student.gender === 'female' ? 'bg-pink-100 text-pink-600' : 'bg-blue-100 text-blue-600'}`}>
                       {student.initials}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className={`font-medium text-gray-900 ${isMobile ? 'text-sm' : ''}`}>
+                      <span className="font-medium text-gray-800 text-sm">
                         {student.name}
                       </span>
-                      {!isMobile && getStatusBadge(student.status)}
                     </div>
-                    <div className={`${isMobile ? 'text-xs flex items-center gap-2' : 'text-xs'} text-gray-500`}>
+                    <div className="text-xs text-gray-500 flex items-center gap-2">
                       <span>{student.rollNumber}</span>
-                      {isMobile && getStatusBadge(student.status)}
+                      {getStatusBadge(student.status)}
                     </div>
                   </div>
                 </div>
                 
                 {dateStatus !== "future" && (isSelectMode ? (
                   <div 
-                    className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} rounded border flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-all`} 
-                    onClick={() => handleToggleSelect(student.id)}
+                    className="w-5 h-5 rounded border flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-all" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleSelect(student.id);
+                    }}
                   >
                     {selectedStudents.includes(student.id) && (
-                      <CheckCircle className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} text-blue-500`} />
+                      <CheckCircle className="w-4 h-4 text-blue-500" />
                     )}
                   </div>
                 ) : (
-                  <div className="flex gap-1">
-                    {dateStatus === "today" ? (
-                      isMobile ? (
-                        // Mobile: One-tap toggle button
-                        <button
-                          className={`p-1.5 rounded-full transition-all active:scale-90 ${
-                            student.status === 'present' ? 'bg-green-500' : 
-                            student.status === 'absent' ? 'bg-red-500' :
-                            student.status === 'late' ? 'bg-amber-500' : 'bg-blue-500'
-                          } text-white`}
-                          onClick={() => handleQuickToggle(student.id)}
-                        >
-                          {student.status === 'present' ? <CheckCircle size={14} /> : 
-                           student.status === 'absent' ? <XCircle size={14} /> : 
-                           student.status === 'late' ? <Clock size={14} /> : <Calendar size={14} />}
-                        </button>
-                      ) : (
-                        // Desktop: Individual status buttons
-                        attendanceOptions.map(option => (
-                          <button
-                            key={option.value}
-                            className={`p-1.5 rounded-md ${student.status === option.value ? option.color : 'bg-gray-100'} 
-                                    ${student.status === option.value ? 'text-white' : 'text-gray-500'}
-                                    transition-all hover:scale-110`}
-                            onClick={() => handleAttendanceChange(student.id, option.value)}
-                          >
-                            <option.icon size={14} />
-                          </button>
-                        ))
-                      )
-                    ) : (
-                      <Button 
-                        size="sm"
-                        variant="ghost"
-                        className="p-1 text-blue-500 hover:text-blue-700 transition-all hover:scale-110"
-                        onClick={handleEditAttendance}
-                      >
-                        <Edit size={isMobile ? 12 : 14} />
-                      </Button>
-                    )}
-                  </div>
+                  dateStatus === "today" && (
+                    <button
+                      className={`p-1.5 rounded-full transition-all active:scale-90 ${
+                        student.status === 'present' ? 'bg-emerald-100 text-emerald-700' : 
+                        student.status === 'absent' ? 'bg-rose-100 text-rose-700' :
+                        student.status === 'late' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleQuickToggle(student.id);
+                      }}
+                    >
+                      {student.status === 'present' ? <CheckCircle size={16} /> : 
+                       student.status === 'absent' ? <XCircle size={16} /> : 
+                       student.status === 'late' ? <Clock size={16} /> : <Calendar size={16} />}
+                    </button>
+                  )
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
       
-      {/* Fixed bottom button for better mobile experience */}
+      {/* Fixed bottom button - simplified */}
       {dateStatus !== "future" && (
-        <div className="fixed bottom-16 left-0 right-0 p-3 bg-white border-t border-gray-200 flex justify-center shadow-lg animate-fade-in z-10">
+        <div className="fixed bottom-16 left-0 right-0 p-3 bg-white border-t border-gray-100 flex justify-center shadow-md animate-fade-in z-10">
           <Button 
-            className="w-full max-w-md bg-teacherApp-accent hover:bg-black text-white shadow-md hover:shadow-lg transition-all animate-scale-in"
+            className="w-full max-w-md bg-black hover:bg-gray-800 text-white shadow-md transition-all animate-scale-in"
             onClick={handleSubmit}
           >
             {dateStatus === "past" ? "Update Attendance" : "Submit Attendance"}
