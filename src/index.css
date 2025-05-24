@@ -47,6 +47,7 @@
   body {
     @apply bg-teacherApp-background text-teacherApp-text;
     font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -63,6 +64,11 @@
   
   p {
     @apply leading-7;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
   }
 }
 
@@ -193,4 +199,38 @@ button:hover {
 
 button:active {
   transform: translateY(1px);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .page-container {
+    @apply px-3 py-3;
+  }
+  
+  /* Snappier animations on mobile */
+  .animate-fade-in {
+    animation-duration: 0.3s;
+  }
+  
+  .animate-slide-in-up {
+    animation-duration: 0.3s;
+  }
+  
+  /* Touch-friendly targets */
+  button, 
+  .interactive-element {
+    @apply min-h-9 min-w-9;
+  }
+}
+
+/* Reduce motion preference support */
+@media (prefers-reduced-motion) {
+  *, 
+  *::before, 
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
